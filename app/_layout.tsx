@@ -17,96 +17,97 @@ import BackgroundInfoScreen from './screens/BackgroundInfoScreen';
 import InscriptionScreen from './(tabs)/InscriptionScreen';
 import RechercheFormationsScreen from './(tabs)/RechercheFormationsScreen';
 import NotifsScreen from './(tabs)/NotifsScreen';
-import ProfilScreen from './(tabs)/ProfilScreen';
 import AjoutFormationScreen from './screens/AjoutFormationScreen';
-import DemandesFormationsScreen from './(tabs)/DemandesFormationsScreen';
-import DemandesProfilsScreen from './(tabs)/DemandesProfilsScreen';
 import UnderConstructionScreen from './screens/UnderConstructionScreen';
 import FormationScreen from './screens/FormationScreen';
 import OrganizationsPartenairesScreen from './screens/OrganizationsPartenairesScreen';
 import InscriptionFormationScreen from './screens/InscriptionFormationScreen';
-import ValidationProfilScreen from './screens/ValidationProfilScreen';
-import AjoutFormateurScreen from './screens/AjoutFormateurScreen';
 import RGPDScreen from './screens/RGPDScreen';
 import NotifsScreenSkeleton from './skeleton/NotifsScreenSkeleton';
 import NotificationExplanationScreen from './screens/NotificationExplanationScreen';
 import AccountDeletionScreen from './screens/AccountDeletionScreen';
-import ParticipantsScreen from './screens/ParticipantsScreen';
+
+// import ProfilScreen from './(tabs)/ProfilScreen';
+// import DemandesProfilsScreen from './(tabs)/DemandesProfilsScreen';
+// import ValidationProfilScreen from './screens/ValidationProfilScreen';
+// import AjoutFormateurScreen from './screens/AjoutFormateurScreen';
+// import ParticipantsScreen from './screens/ParticipantsScreen';
+
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 
-function NewUserTabs() {
-  return (
-    <Tab.Navigator 
-      screenOptions={({ route }) => ({
-        tabBarStyle: {
-          backgroundColor: '#1a53ff',
-          height: 70, // Increased height to accommodate larger text
-        },
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          if (route.name === 'Inscription') {
-            iconName = focused ? 'search' : 'search';
-          } else if (route.name === 'Notifications') {
-            iconName = focused ? 'notifications-outline' : 'notifications-outline';
-          } else if (route.name === 'Profil') {
-            iconName = focused ? 'person' : 'person';
-          }
-          return <Ionicons name={iconName} size={30} color={color} />;
-        },
-        tabBarActiveTintColor: 'black',
-        tabBarInactiveTintColor: 'white',
-        tabBarLabelStyle: {
-          fontSize: 16, // Increased font size
-          fontWeight: 'bold', // Added bold font weight for better visibility
-        },
-        tabBarIconStyle: {
-          marginTop: 5, // Added some top margin to the icon for better spacing
-        },
-      })}
-    >
-      <Tab.Screen name="Inscription" component={InscriptionScreen} />
-      <Tab.Screen name="Notifications" component={NotifsScreen} />
-      <Tab.Screen name="Profil" component={ProfilScreen} />
-    </Tab.Navigator>
-  );
-}
+// function NewUserTabs() {
+//   return (
+//     <Tab.Navigator 
+//       screenOptions={({ route }) => ({
+//         tabBarStyle: {
+//           backgroundColor: '#1a53ff',
+//           height: 70, // Increased height to accommodate larger text
+//         },
+//         tabBarIcon: ({ focused, color, size }) => {
+//           let iconName;
+//           if (route.name === 'Inscription') {
+//             iconName = focused ? 'search' : 'search';
+//           } else if (route.name === 'Notifications') {
+//             iconName = focused ? 'notifications-outline' : 'notifications-outline';
+//           } else if (route.name === 'Profil') {
+//             iconName = focused ? 'person' : 'person';
+//           }
+//           return <Ionicons name={iconName} size={30} color={color} />;
+//         },
+//         tabBarActiveTintColor: 'black',
+//         tabBarInactiveTintColor: 'white',
+//         tabBarLabelStyle: {
+//           fontSize: 16, // Increased font size
+//           fontWeight: 'bold', // Added bold font weight for better visibility
+//         },
+//         tabBarIconStyle: {
+//           marginTop: 5, // Added some top margin to the icon for better spacing
+//         },
+//       })}
+//     >
+//       <Tab.Screen name="Inscription" component={InscriptionScreen} />
+//       <Tab.Screen name="Notifications" component={NotifsScreen} />
+//       <Tab.Screen name="Profil" component={ProfilScreen} />
+//     </Tab.Navigator>
+//   );
+// }
 
-function AdminTabs() {
-  return (
-    <Tab.Navigator screenOptions={({ route }) => ({
-      tabBarStyle:  {
-        backgroundColor: '#1a53ff',
-    },
-      tabBarIcon: ({ focused, color, size }) => {
-        let iconName;
+// function AdminTabs() {
+//   return (
+//     <Tab.Navigator screenOptions={({ route }) => ({
+//       tabBarStyle:  {
+//         backgroundColor: '#1a53ff',
+//     },
+//       tabBarIcon: ({ focused, color, size }) => {
+//         let iconName;
 
-        if (route.name === 'RechercheFormations') {
-          iconName = focused ? 'search' : 'search';
-        } else if (route.name === 'Notifications') {
-          iconName = focused ? 'notifications' : 'notifications';
-        } else if (route.name === 'Administrer') {
-          iconName = focused ? 'shield-checkmark' : 'shield-checkmark';
-        } else if (route.name === 'OrganizationsPartenaires') {
-          iconName = focused ? 'information-circle-outline' : 'information-circle-outline';
-        }
+//         if (route.name === 'RechercheFormations') {
+//           iconName = focused ? 'search' : 'search';
+//         } else if (route.name === 'Notifications') {
+//           iconName = focused ? 'notifications' : 'notifications';
+//         } else if (route.name === 'Administrer') {
+//           iconName = focused ? 'shield-checkmark' : 'shield-checkmark';
+//         } else if (route.name === 'OrganizationsPartenaires') {
+//           iconName = focused ? 'information-circle-outline' : 'information-circle-outline';
+//         }
 
         
-        // You can return any component that you like here!
-        return <Ionicons name={iconName} size={size} color={color} />;
-      },
-      tabBarActiveTintColor: 'white',
-      tabBarInactiveTintColor: 'black',
-    })}>
-      <Tab.Screen name="RechercheFormations" component={RechercheFormationsScreen} initialParams={{spoofLoggedIn: false, spoofFormateur: true, spoofAdmin: true, spoofValidated: true}} />
-      {/* <Tab.Screen name="NotifsScreenSkeleton" component={NotifsScreenSkeleton} /> */}
-      <Tab.Screen name="Administrer" component={DemandesProfilsScreen} />
-      <Tab.Screen name="OrganizationsPartenaires" component={OrganizationsPartenairesScreen} />
+//         // You can return any component that you like here!
+//         return <Ionicons name={iconName} size={size} color={color} />;
+//       },
+//       tabBarActiveTintColor: 'white',
+//       tabBarInactiveTintColor: 'black',
+//     })}>
+//       <Tab.Screen name="RechercheFormations" component={RechercheFormationsScreen} initialParams={{spoofLoggedIn: false, spoofFormateur: true, spoofAdmin: true, spoofValidated: true}} />
+//       {/* <Tab.Screen name="NotifsScreenSkeleton" component={NotifsScreenSkeleton} /> */}
+//       <Tab.Screen name="Administrer" component={DemandesProfilsScreen} />
+//       <Tab.Screen name="OrganizationsPartenaires" component={OrganizationsPartenairesScreen} />
 
-    </Tab.Navigator>
-  );
-}
+//     </Tab.Navigator>
+//   );
+// }
 
 function App() {
   const [gameFileContext, setGameFile] =   React.useState({"isFormateur":"true", "isValidated":"true"}) //ouch
@@ -199,34 +200,34 @@ function App() {
     );
   }
 
-  function FormateurTabs() {
-    return (
-      <Tab.Navigator screenOptions={({ route }) => ({
-        tabBarStyle:  {
-          backgroundColor: '#1a53ff',
-      },
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
+  // function FormateurTabs() {
+  //   return (
+  //     <Tab.Navigator screenOptions={({ route }) => ({
+  //       tabBarStyle:  {
+  //         backgroundColor: '#1a53ff',
+  //     },
+  //       tabBarIcon: ({ focused, color, size }) => {
+  //         let iconName;
   
-          if (route.name === 'RechercheFormations') {
-            iconName = focused ? 'search' : 'search';
-          } else if (route.name === 'Notifications') {
-            iconName = focused ? 'notifications-outline' : 'notifications-outline';
-          } else if (route.name === 'Profil') {
-            iconName = focused ? 'person' : 'person';
-          }
-          // You can return any component that you like here!
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: 'white',
-        tabBarInactiveTintColor: 'black',
-      })}>
-        <Tab.Screen name="RechercheFormations" component={RechercheFormationsScreen} initialParams={{spoofLoggedIn: true, spoofFormateur: true, spoofAdmin: false, spoofValidated: true}}/>
-        <Tab.Screen name="Notifications" component={NotifsScreen} initialParams={{"gameFileContext": gameFileContext}}/>
-        <Tab.Screen name="Profil" component={ProfilScreen} initialParams={{"gameFileContext": gameFileContext}}/>
-      </Tab.Navigator>
-    );
-  }
+  //         if (route.name === 'RechercheFormations') {
+  //           iconName = focused ? 'search' : 'search';
+  //         } else if (route.name === 'Notifications') {
+  //           iconName = focused ? 'notifications-outline' : 'notifications-outline';
+  //         } else if (route.name === 'Profil') {
+  //           iconName = focused ? 'person' : 'person';
+  //         }
+  //         // You can return any component that you like here!
+  //         return <Ionicons name={iconName} size={size} color={color} />;
+  //       },
+  //       tabBarActiveTintColor: 'white',
+  //       tabBarInactiveTintColor: 'black',
+  //     })}>
+  //       <Tab.Screen name="RechercheFormations" component={RechercheFormationsScreen} initialParams={{spoofLoggedIn: true, spoofFormateur: true, spoofAdmin: false, spoofValidated: true}}/>
+  //       <Tab.Screen name="Notifications" component={NotifsScreen} initialParams={{"gameFileContext": gameFileContext}}/>
+  //       <Tab.Screen name="Profil" component={ProfilScreen} initialParams={{"gameFileContext": gameFileContext}}/>
+  //     </Tab.Navigator>
+  //   );
+  // }
 
   // useEffect(()=>{   
   //   setGameFile({"isFormateur":"true"})
@@ -252,28 +253,27 @@ function App() {
         
         <Stack.Screen name="NotificationExplanation" component={NotificationExplanationScreen} />
         <Stack.Screen name="AccountDeletion" component={AccountDeletionScreen} />
-
         
-        <Stack.Screen name="Participants"       component={ParticipantsScreen} />
         
-        <Stack.Screen name="AjoutFormation"       component={AjoutFormationScreen} />
         <Stack.Screen name="Formation"       component={FormationScreen} />
         <Stack.Screen name="RechercheFormations"  component={RechercheFormationsScreen} options={{ headerShown: true, headerBackTitleVisible: true }}/>
         <Stack.Screen name="InscriptionFormation" component={InscriptionFormationScreen} />
 
         {/* tabs if ADMIN */}
-        <Stack.Screen name="AdminTabs"            component={AdminTabs} options={{ headerShown: false }}  />
-        <Stack.Screen name="ValidationProfil" component={ValidationProfilScreen} />
-        <Stack.Screen name="AjoutFormateur"       component={AjoutFormateurScreen} />
+        {/* <Stack.Screen name="AjoutFormation"       component={AjoutFormationScreen} /> */}
+        {/* <Stack.Screen name="AdminTabs"            component={AdminTabs} options={{ headerShown: false }}  /> */}
+        {/* <Stack.Screen name="ValidationProfil" component={ValidationProfilScreen} /> */}
+        {/* <Stack.Screen name="AjoutFormateur"       component={AjoutFormateurScreen} /> */}
+        {/* <Stack.Screen name="Participants"       component={ParticipantsScreen} /> */}
 
         {/* tabs if NEW */}
-        <Stack.Screen name="NewUserTabs" component={NewUserTabs} options={{ headerShown: false }} />
+        {/* <Stack.Screen name="NewUserTabs" component={NewUserTabs} options={{ headerShown: false }} /> */}
 
         {/* tabs if ETUDIANT */}
         <Stack.Screen name="UserTabs" component={UserTabs} options={{ headerShown: false }}  />
 
         {/* tabs if FORMATEUR */}
-        <Stack.Screen name="FormateurTabs" component={FormateurTabs} options={{ headerShown: false }}  />
+        {/* <Stack.Screen name="FormateurTabs" component={FormateurTabs} options={{ headerShown: false }}  /> */}
         
         {/* Restrained Functionality */}
         <Stack.Screen name="RestrainedTabs"            component={RestrainedTabs} options={{ headerShown: false }}  />

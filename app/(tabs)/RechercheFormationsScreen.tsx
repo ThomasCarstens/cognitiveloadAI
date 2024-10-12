@@ -588,13 +588,13 @@ const RechercheFormationsScreen = (props, { route }) => {
         <Image source={{ uri: item.image }} style={styles.formationImage} />
         <View style={styles.formationDetails}>
           <Text style={styles.formationTitle}>{item.title}</Text>
-          {isAdmin && (
+          {/* {isAdmin && (
             <TouchableOpacity style={styles.participantsButton} onPress={()=>navigation.navigate("Participants", { formationId: item.id})}>
               <Text style={styles.participantsButtonText}>
                 Demandes: {participantCounts[item.id] || 0}
               </Text>
             </TouchableOpacity>
-          )}
+          )} */}
           <Text>Début: {item.date}</Text>
           <Text>Fin: {item.date_de_fin}</Text>
           <Text>Lieu: {item.lieu}</Text>
@@ -675,14 +675,14 @@ const RechercheFormationsScreen = (props, { route }) => {
         style={styles.list}
       />
 
-      {isFormateur && (
+      {/* {isFormateur && (
         <TouchableOpacity 
           style={styles.newFormationButton}
           onPress={() => navigation.navigate('AjoutFormation')}
         >
           <Text style={styles.newFormationButtonText}>+</Text>
         </TouchableOpacity>
-      )}
+      )} */}
     </View>
   );
 };

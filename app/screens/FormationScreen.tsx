@@ -212,7 +212,7 @@ const FormationScreen = ({ route, navigation }) => {
     <ScrollView style={styles.container}>
       <Image source={{ uri: formation.image }} style={styles.image} />
       <Text style={styles.title}>{formation.title}</Text>
-      {(role.isAdmin === true) ? (
+      {/* {(role.isAdmin === true) ? (
          <View style={styles.buttonContainer}>
          {formation.active && (
            <TouchableOpacity 
@@ -245,7 +245,7 @@ const FormationScreen = ({ route, navigation }) => {
            </>
          )}
        </View>
-      ) : (
+      ) : ( */}
         <View style={styles.buttonContainer}>
          {formation.active && (
            <TouchableOpacity 
@@ -262,7 +262,7 @@ const FormationScreen = ({ route, navigation }) => {
            </TouchableOpacity>
          )}
         </View>
-      )}
+      {/* )} */}
       <Text style={styles.info}>Début: {formation.date}</Text>
       <Text style={styles.info}>Fin: {formation.date_de_fin}</Text>
       <Text style={styles.info}>Heure: {formation.heureDebut} - {formation.heureFin}</Text>
