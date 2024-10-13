@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Switch, Alert, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { ref as ref_d, set } from 'firebase/database';
 import { database, auth } from '../../firebase';
@@ -97,31 +97,38 @@ const InscriptionFormationScreen = ({ route, navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Inscription à la Formation {formationTitle}</Text>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollViewContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.title}>Inscription à la Formation {formationTitle}</Text>
 
-      <View style={styles.nameContainer}>
-        <View style={styles.nameField}>
-          <Text style={styles.label}>Nom *</Text>
-          <TextInput
-            style={styles.input}
-            value={nom}
-            onChangeText={setNom}
-            placeholder="Nom de famille"
-            required
-          />
+        <View style={styles.nameContainer}>
+          <View style={styles.nameField}>
+            <Text style={styles.label}>Nom *</Text>
+            <TextInput
+              style={styles.input}
+              value={nom}
+              onChangeText={setNom}
+              placeholder="Nom de famille"
+              required
+            />
+          </View>
+          <View style={styles.nameField}>
+            <Text style={styles.label}>Prénom *</Text>
+            <TextInput
+              style={styles.input}
+              value={prenom}
+              onChangeText={setPrenom}
+              placeholder="Prénom"
+              required
+            />
+          </View>
         </View>
-        <View style={styles.nameField}>
-          <Text style={styles.label}>Prénom *</Text>
-          <TextInput
-            style={styles.input}
-            value={prenom}
-            onChangeText={setPrenom}
-            placeholder="Prénom"
-            required
-          />
-        </View>
-      </View>
 
       <View style={styles.formGroup}>
         <Text style={styles.label}>Médecin Diplômé</Text>
@@ -214,10 +221,11 @@ const InscriptionFormationScreen = ({ route, navigation }) => {
         </View>
       )}
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>S'inscrire</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>S'inscrire</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -225,8 +233,11 @@ const InscriptionFormationScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#d5dcf0',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    padding: 20,
   },
   title: {
     fontSize: 24,
@@ -270,6 +281,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
+    marginTop: 20,
   },
   buttonText: {
     color: 'white',
@@ -278,5 +290,6 @@ const styles = StyleSheet.create({
   },
 });
 
+export default InscriptionFormationScreen;
 
 export default InscriptionFormationScreen;
