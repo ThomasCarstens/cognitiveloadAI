@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Switch, Alert, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Switch, Alert, KeyboardAvoidingView, ScrollView, Platform, Keyboard } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { ref as ref_d, set } from 'firebase/database';
 import { database, auth } from '../../firebase';
@@ -95,16 +95,35 @@ const InscriptionFormationScreen = ({ route, navigation }) => {
       Alert.alert('Erreur', 'Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer.');
     }
   };
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      (e) => setKeyboardHeight(e.endCoordinates.height)
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setKeyboardHeight(0)
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       <ScrollView 
-        contentContainerStyle={styles.scrollViewContent}
-        keyboardShouldPersistTaps="handled"
-      >
+          contentContainerStyle={[
+            styles.scrollViewContent,
+            { paddingBottom: keyboardHeight + 20 } // Add dynamic padding
+          ]}
+          keyboardShouldPersistTaps="handled"
+        >
         <Text style={styles.title}>Inscription à la Formation {formationTitle}</Text>
 
         <View style={styles.nameContainer}>
@@ -292,4 +311,4 @@ const styles = StyleSheet.create({
 
 export default InscriptionFormationScreen;
 
-export default InscriptionFormationScreen;
+

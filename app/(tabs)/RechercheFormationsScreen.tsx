@@ -534,7 +534,14 @@ const RechercheFormationsScreen = (props, { route }) => {
     if (anneeFilter) {
       filtered = filtered.filter(f => f.anneeConseillee === anneeFilter);
     }
-    if (tab === "J'y suis inscrit") {
+    const today = new Date();
+    const twoDaysFromNow = new Date(today.getTime() + (2 * 24 * 60 * 60 * 1000));
+    if (tab === 'Actuelles') {
+      filtered = filtered.filter(f => {
+        const startDate = new Date(f.date);
+        return startDate >= twoDaysFromNow;
+      });
+    } else if (tab === "J'y suis inscrit") {
       filtered = filtered.filter(f => 
         userDemandes[f.id] && userDemandes[f.id].admin === "Validée"
       );
@@ -632,8 +639,9 @@ const RechercheFormationsScreen = (props, { route }) => {
       {/* {renderTopButtons()} */}
 
       <View style={styles.tabContainer}>
-        {(isFormateur?['Visibles', "J'y suis inscrit", 'Je propose', 'Cachées']
-        :(isLoggedIn?['Visibles', "J'y suis inscrit"]:['Visibles'])).map((tab) => (
+        {(isFormateur ? ['Visibles', "J'y suis inscrit", 'Je propose', 'Cachées']
+         : (isLoggedIn ? ['Toutes', 'Actuelles', "J'y suis inscrit"] : ['Visibles', 'Actuelles']))
+         .map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[styles.tab, activeTab === tab && styles.activeTab]}
