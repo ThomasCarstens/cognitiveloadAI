@@ -5,7 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { ref as ref_d, set, get } from 'firebase/database';
 import { ref as ref_s, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, firebase, storage, database } from '../../firebase';
-import * as ImagePicker from 'expo-image-picker';
+// import * as ImagePicker from 'expo-image-picker';
 
 const AjoutFormationScreen = ({ navigation, route }) => {
   const [formData, setFormData] = useState({
@@ -127,16 +127,17 @@ const AjoutFormationScreen = ({ navigation, route }) => {
   };
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+    // let result = await ImagePicker.launchImageLibraryAsync({
+    //   mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    //   allowsEditing: true,
+    //   aspect: [4, 3],
+    //   quality: 1,
+    // });
 
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
+    // if (!result.canceled) {
+    //   setImageUri(result.assets[0].uri);
+    // }
+    let result = null
   };
   const uploadImage = async () => {
     if (imageUri) {
