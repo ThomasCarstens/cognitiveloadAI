@@ -1,23 +1,55 @@
-// import React from 'react';
-// import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { auth, storage, database } from '../../firebase'
-import { getDownloadURL, list, ref } from 'firebase/storage'
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, TextInput, Button, StyleSheet, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { View, Text, Image, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform, Dimensions } from 'react-native';
+import { auth, storage, database } from '../../firebase';
+import { getDownloadURL, list, ref } from 'firebase/storage';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { ref as ref_d, onValue } from 'firebase/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-
+import { LineChart } from 'react-native-chart-kit';
 
 const LoginScreen = ({ navigation }) => {
-
-   const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(true);
   const [userRoles, setUserRoles] = useState({});
   const [uid, setUid] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Chart data
+  const chartData = {
+    labels: ['60', '70', '80'],
+    datasets: [
+      {
+        data: [60, 70, 80],
+        color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+        strokeWidth: 2
+      },
+      {
+        data: [60, 90, 75],
+        color: (opacity = 1) => `rgba(139, 0, 0, ${opacity})`,
+        strokeWidth: 2
+      }
+    ],
+    legend: ['Series 1', 'Series 2']
+  };
+
+  const chartConfig = {
+    backgroundColor: '#111111',
+    backgroundGradientFrom: '#111111',
+    backgroundGradientTo: '#111111',
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    style: {
+      borderRadius: 16
+    },
+    propsForDots: {
+      r: '6',
+      strokeWidth: '2',
+    }
+  };
+
   useEffect(() => {
     auth.onAuthStateChanged(function(user) {
       checkCachedUser();
@@ -117,6 +149,7 @@ const LoginScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -124,6 +157,7 @@ const LoginScreen = ({ navigation }) => {
       </View>
     );
   }
+
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -133,12 +167,26 @@ const LoginScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollViewContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Image source={require('../../assets/images/logoEsculappl.png')} style={styles.logo} />
-        {/* <Image source={require('../../assets/images/logoEsculappl2.png')} style={styles.logo2} /> */}
+        {/* <Image source={require('../../assets/images/logos/cogai.jpeg')} style={styles.logo} /> */}
         <View style={styles.titleContainer}>
-          <Text style={styles.appTitle}>Esculappl</Text>
-          <Text style={styles.appSlogan}>Appli de Formations de Médecine Manuelle</Text>
+          <Text style={styles.appTitle}>Cognitive Load AI</Text>
+          <Text style={styles.appSlogan}>Concentration management AI</Text>
         </View>
+        
+        <View style={styles.graphContainer}>
+          <LineChart
+            data={chartData}
+            width={Dimensions.get('window').width - 40}
+            height={220}
+            chartConfig={chartConfig}
+            bezier
+            style={{
+              marginVertical: 8,
+              borderRadius: 16
+            }}
+          />
+        </View>
+
         <Text style={styles.inputLabel}>Email</Text>
         <View style={styles.formContainer}>
           <TextInput
@@ -165,7 +213,7 @@ const LoginScreen = ({ navigation }) => {
               <Ionicons
                 name={showPassword ? 'eye-off' : 'eye'}
                 size={24}
-                color="#00008B"
+                color="#000"
               />
             </TouchableOpacity>
           </View>
@@ -186,7 +234,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#00008B',
+    backgroundColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
@@ -199,12 +247,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   logo: {
-    width: 150,
-    height: 250,
-    marginBottom: 20,
-    borderRadius: 30,
-  },
-  logo2: {
     width: 150,
     height: 150,
     marginBottom: 20,
@@ -223,10 +265,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
   },
-  versionText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    marginBottom: 30,
+  graphContainer: {
+    width: '100%',
+    backgroundColor: '#111111',
+    borderRadius: 16,
+    padding: 10,
+    marginBottom: 20,
   },
   formContainer: {
     width: '100%',
@@ -234,7 +278,7 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: 'gray',
+    borderColor: '#333',
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
@@ -267,7 +311,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: 'white',
     borderRadius: 5,
-    borderColor: 'gray',
+    borderColor: '#333',
     borderWidth: 1,
   },
   passwordInput: {
@@ -278,33 +322,12 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: 10,
   },
-  // buttonText: {
-  //   fontWeight: 'bold',
-  //   fontSize: 16,
-  // },
-  // primaryButton: {
-  //   backgroundColor: '#4CAF50',
-  // },
-  // secondaryButton: {
-  //   backgroundColor: '#FFFFFF',
-  // },
-  // adminButtonContainer: {
-  //   width: '100%',
-  //   alignItems: 'center',
-  //   marginTop: 20,
-  // },
-  // adminButton: {
-  //   backgroundColor: '#333',
-  //   borderWidth: 1,
-  //   borderColor: '#888',
-  //   width: '50%',
-  // },
   buttonText: {
     fontWeight: 'bold',
     fontSize: 16,
   },
   primaryButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#8B0000',
   },
   primaryButtonText: {
     color: '#FFFFFF',
@@ -313,21 +336,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   secondaryButtonText: {
-    color: '#00008B',
-  },
-  adminButtonContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  adminButton: {
-    backgroundColor: '#333',
-    borderWidth: 1,
-    borderColor: '#888',
-    width: '50%',
-  },
-  adminButtonText: {
-    color: 'white',
+    color: '#000000',
   },
   inputLabel: {
     color: 'white',

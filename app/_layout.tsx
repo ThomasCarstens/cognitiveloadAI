@@ -26,6 +26,7 @@ import RGPDScreen from './screens/RGPDScreen';
 import NotifsScreenSkeleton from './skeleton/NotifsScreenSkeleton';
 import NotificationExplanationScreen from './screens/NotificationExplanationScreen';
 import AccountDeletionScreen from './screens/AccountDeletionScreen';
+import ReactionTestScreen from './screens/ReactionTestScreen';
 
 // import ProfilScreen from './(tabs)/ProfilScreen';
 // import DemandesProfilsScreen from './(tabs)/DemandesProfilsScreen';
@@ -155,7 +156,7 @@ function App() {
             iconName = focused ? 'search' : 'search';
           } else if (route.name === 'Notifications') {
             iconName = focused ? 'notifications' : 'notifications';
-          } else if (route.name === 'OrganizationsPartenaires') {
+          } else if (route.name === 'ReactionTest') {
             iconName = focused ? 'information-circle-outline' : 'information-circle-outline';
           }
           // You can return any component that you like here!
@@ -166,7 +167,7 @@ function App() {
       })}>
         <Tab.Screen name="RechercheFormations" component={RechercheFormationsScreen} initialParams={{spoofLoggedIn: true, spoofFormateur: false, spoofAdmin: false, spoofValidated: true}}/>
         <Tab.Screen name="Notifications" component={NotifsScreen} initialParams={{"gameFileContext": gameFileContext}}/>
-        <Tab.Screen name="OrganizationsPartenaires" component={OrganizationsPartenairesScreen} initialParams={{"gameFileContext": gameFileContext}}/>
+        <Tab.Screen name="ReactionTest" component={ReactionTestScreen} initialParams={{"gameFileContext": gameFileContext}}/>
       </Tab.Navigator>
     );
   }
@@ -250,7 +251,8 @@ function App() {
         <Stack.Screen name="OrganizationsPartenaires" component={OrganizationsPartenairesScreen} />
         <Stack.Screen name="RGPD" component={RGPDScreen} />
         <Stack.Screen name="NotifsScreenSkeleton"       component={NotifsScreenSkeleton} />
-        
+        <Stack.Screen name="ReactionTest" component={ReactionTestScreen}/>
+
         <Stack.Screen name="NotificationExplanation" component={NotificationExplanationScreen} />
         <Stack.Screen name="AccountDeletion" component={AccountDeletionScreen} />
         
