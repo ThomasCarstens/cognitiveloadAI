@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_number": "891359673788",
-    "project_id": "esculappl-france",
-    "storage_bucket": "esculappl-france.appspot.com"
+    "project_number": "349759213253",
+    "firebase_url": "https://appdolivier-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "appdolivier",
+    "storage_bucket": "appdolivier.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:891359673788:android:1b1814c6eb43f5a63e7fb9",
+        "mobilesdk_app_id": "1:349759213253:android:492e8ddecef48fb7756aac",
         "android_client_info": {
           "package_name": "com.olivierdumay.appdolivier"
         }
@@ -15,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAOl1F9SBcnWnDpJYw0kuwivEJ3Pf8XUWo"
+          "current_key": "AIzaSyBQkwrqsy7pP4r1ynJWHv2ZDaRJsMMm5gw"
         }
       ],
       "services": {
