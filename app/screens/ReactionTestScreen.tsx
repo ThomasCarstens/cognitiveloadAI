@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, SafeAreaView, Dimensions } from 'react-native';
 import { Audio } from 'expo-av';
 import { 
   CameraView, 
@@ -16,7 +16,27 @@ import Animated, {
   FadeIn,
   FadeOut,
   LinearTransition,
+  withTiming,
+  useAnimatedStyle,
 } from "react-native-reanimated";
+
+const CIRCLE_SIZE = 60;
+const TOTAL_CIRCLES = 6;
+const SEQUENCES = 10;
+const MAX_TEST_DURATION = 60000; // 1 minute
+
+// Separate AnimatedCircle component to avoid hook issues
+const AnimatedCircle = React.memo(({ isActive, onPress }) => {
+    const animatedStyle = useAnimatedStyle(() => ({
+        backgroundColor: withTiming(isActive ? '#FFA500' : '#00008B', { duration: 200 })
+    }));
+
+    return (
+        <TouchableOpacity onPress={onPress} style={styles.circleContainer}>
+            <Animated.View style={[styles.circle, animatedStyle]} />
+        </TouchableOpacity>
+    );
+});
 
 const ReactionTestScreen = ({ navigation }) => {
     const [isRecording, setIsRecording] = useState(false);
@@ -27,15 +47,24 @@ const ReactionTestScreen = ({ navigation }) => {
     const [timeLeft, setTimeLeft] = useState(60);
     const [micPermission, requestMicPermission] = useMicrophonePermissions();
     
-    // Camera controls (from HomeScreen)
-    const [cameraMode, setCameraMode] = useState<CameraMode>("video");
-    const [cameraTorch, setCameraTorch] = useState<boolean>(false);
-    const [cameraFlash, setCameraFlash] = useState<FlashMode>("off");
-    const [cameraFacing, setCameraFacing] = useState<CameraType>("back");
-    const [cameraZoom, setCameraZoom] = useState<number>(0);
-    const [videoRecordingUri, setVideoRecordingUri] = useState<string | null>(null);
+    // New states for reaction test
+    const [showReactionTest, setShowReactionTest] = useState(false);
+    const [activeCircle, setActiveCircle] = useState(null);
+    const [sequence, setSequence] = useState(0);
+    const [reactionTimes, setReactionTimes] = useState([]);
+    const [testStarted, setTestStarted] = useState(false);
+    const [testComplete, setTestComplete] = useState(false);
+    
+    // Camera controls
+    const [cameraMode, setCameraMode] = useState("video");
+    const [cameraTorch, setCameraTorch] = useState(false);
+    const [cameraFlash, setCameraFlash] = useState("off");
+    const [cameraFacing, setCameraFacing] = useState("front");
+    const [cameraZoom, setCameraZoom] = useState(0);
+    const [videoRecordingUri, setVideoRecordingUri] = useState(null);
     
     const cameraRef = useRef(null);
+    const lastActivationTime = useRef(0);
 
     useEffect(() => {
         const setupPermissions = async () => {
@@ -62,7 +91,6 @@ const ReactionTestScreen = ({ navigation }) => {
 
         setupPermissions();
     }, [cameraPermission, micPermission]);
-
     const startVoiceRecording = async () => {
         if (!micPermission?.granted) {
             Alert.alert('Permission Required', 'Microphone permission is required to record audio');
@@ -85,103 +113,6 @@ const ReactionTestScreen = ({ navigation }) => {
             Alert.alert('Failed to start recording', err.message);
         }
     };
-
-    const stopVoiceRecording = async () => {
-        if (!recording) return;
-        
-        try {
-            await recording.stopAndUnloadAsync();
-            const uri = recording.getURI();
-            setVoiceURL(uri);
-            setIsRecording(false);
-            setShowVideoRecorder(true);
-        } catch (err) {
-            Alert.alert('Failed to stop recording', err.message);
-        }
-    };
-
-    const startVideoRecording = async () => {
-        if (cameraRef.current) {
-            try {
-                const recordingOptions = {
-                    maxDuration: 120000,
-                    quality: '1080p',
-                    flashMode: cameraFlash,
-                    zoom: cameraZoom,
-                };
-                
-                setIsRecording(true);
-                const data = await cameraRef.current.recordAsync(recordingOptions);
-                setVideoRecordingUri(data.uri);
-            } catch (error) {
-                console.error("Error recording video:", error);
-                Alert.alert('Recording Error', 'Failed to start video recording');
-            }
-        }
-    };
-
-    const stopVideoRecording = async () => {
-        if (cameraRef.current) {
-            try {
-                await cameraRef.current.stopRecording();
-                setIsRecording(false);
-            } catch (err) {
-                Alert.alert('Failed to stop video recording', err.message);
-            }
-        }
-    };
-    const uploadToStorage = async (uri, path) => {
-        try {
-          const response = await fetch(uri);
-          const blob = await response.blob();
-          const fileRef = storageRef(storage, path);
-          await uploadBytes(fileRef, blob);
-          
-          return await getDownloadURL(fileRef);
-        } catch (error) {
-          Alert.alert('Upload failed', error.message);
-          throw error;
-        }
-    };
-
-    const handleComplete = async () => {
-        if (!voiceURL || !videoRecordingUri) {
-            Alert.alert('Error', 'Please complete both recordings first');
-            return;
-        }
-
-        try {
-            const timestamp = Date.now();
-            const uid = auth.currentUser.uid;
-
-            const voicePath = `reaction-test/${uid}/${timestamp}/voice_recording`;
-            const voiceStorageURL = await uploadToStorage(voiceURL, voicePath);
-
-            const videoPath = `reaction-test/${uid}/${timestamp}/video_recording`;
-            const videoStorageURL = await uploadToStorage(videoRecordingUri, videoPath);
-
-            // Create a reference to the specific location in the Realtime Database
-            const reactionTestRef = dbRef(database, `reaction-test/${timestamp}`);
-            
-            // Set the data in the Realtime Database
-            await set(reactionTestRef, {
-                id_data: timestamp,
-                date: timestamp,
-                game_nb: 23,
-                reactiontime: [304, 33, 493],
-                fatigue_opinion: '55%',
-                voice_recording: voiceStorageURL,
-                video_recording: videoStorageURL,
-                userId: uid // Optional: add user ID for easier querying
-            });
-
-            Alert.alert('Success', 'Test completed and uploaded successfully');
-            navigation.goBack();
-        } catch (err) {
-            Alert.alert('Upload failed', err.message);
-        }
-    };
-
     const renderCameraControls = () => (
         <View style={styles.cameraControls}>
             <TouchableOpacity
@@ -207,13 +138,139 @@ const ReactionTestScreen = ({ navigation }) => {
                 onPress={() => setCameraFlash(current => 
                     current === "off" ? "on" : "off"
                 )}
-            >
+                render  >
                 <Text style={styles.controlButtonText}>
                     Flash: {cameraFlash}
                 </Text>
             </TouchableOpacity>
         </View>
     );
+
+    const startVideoRecording = async () => {
+        console.log('starting Video Recording...')
+        if (cameraRef.current) {
+            try {
+                console.log('activating...')
+                const recordingOptions = {
+                    maxDuration: 120000,
+                    quality: '1080p',
+                    flashMode: cameraFlash,
+                    zoom: cameraZoom,
+                };
+                
+                setIsRecording(true);
+                const data = await cameraRef.current.recordAsync(recordingOptions);
+                setVideoRecordingUri(data.uri);
+                console.log('recording...')
+            } catch (error) {
+                console.error("Error recording video:", error);
+                Alert.alert('Recording Error', 'Failed to start video recording');
+            }
+        }
+    };
+
+    const stopVideoRecording = async () => {
+        console.log('stopping Video Recording !')
+        if (cameraRef.current) {
+            try {
+                await cameraRef.current.stopRecording();
+                setIsRecording(false);
+            } catch (err) {
+                Alert.alert('Failed to stop video recording', err.message);
+            }
+        }
+    };
+    const uploadToStorage = async (uri, path) => {
+        console.log('uploading to Storage')
+        try {
+          const response = await fetch(uri);
+          const blob = await response.blob();
+          const fileRef = storageRef(storage, path);
+          await uploadBytes(fileRef, blob);
+          
+          return await getDownloadURL(fileRef);
+        } catch (error) {
+          Alert.alert('Upload failed', error.message);
+          throw error;
+        }
+    };
+    const generateRandomSequence = () => {
+        const sequence = [];
+        let totalTime = 0;
+        
+        for (let i = 0; i < SEQUENCES; i++) {
+            const circle = Math.floor(Math.random() * TOTAL_CIRCLES);
+            const delay = Math.random() * 3000 + 1000; // 1-4 seconds delay
+            totalTime += delay;
+            
+            if (totalTime <= MAX_TEST_DURATION) {
+                sequence.push({ circle, delay });
+            }
+        }
+        
+        return sequence;
+    };
+
+    const startReactionTest = async () => {
+        const sequence = generateRandomSequence();
+        setTestStarted(true);
+        setTestComplete(false);
+        setReactionTimes([]);
+        setSequence(0);
+        
+        // Start video recording
+        await startVideoRecording();
+        
+        let totalDelay = 0;
+        sequence.forEach(({ circle, delay }, index) => {
+            setTimeout(() => {
+                setActiveCircle(circle);
+                lastActivationTime.current = Date.now();
+                
+                // Reset circle after 1.5 seconds if not clicked
+                setTimeout(() => {
+                    if (activeCircle === circle) {
+                        setActiveCircle(null);
+                        setReactionTimes(prev => [...prev, -1]); // -1 indicates missed circle
+                    }
+                }, 1500);
+                
+                setSequence(index + 1);
+                
+                if (index === sequence.length - 1) {
+                    setTimeout(() => {
+                        setTestComplete(true);
+                        stopVideoRecording();
+                    }, 1500);
+                }
+            }, totalDelay);
+            
+            totalDelay += delay;
+        });
+    };
+
+    const handleCirclePress = (index) => {
+        if (index === activeCircle && !testComplete) {
+            const reactionTime = Date.now() - lastActivationTime.current;
+            setReactionTimes(prev => [...prev, reactionTime]);
+            setActiveCircle(null);
+        }
+    };
+
+    // Modify the existing stopVoiceRecording function
+    const stopVoiceRecording = async () => {
+        if (!recording) return;
+        
+        try {
+            await recording.stopAndUnloadAsync();
+            const uri = recording.getURI();
+            setVoiceURL(uri);
+            setIsRecording(false);
+            setShowReactionTest(true); // Show reaction test instead of video recorder
+        } catch (err) {
+            Alert.alert('Failed to stop recording', err.message);
+        }
+    };
 
     const renderVideoRecorder = () => {
         if (!cameraPermission || !cameraPermission.granted) return null;
@@ -261,6 +318,103 @@ const ReactionTestScreen = ({ navigation }) => {
         );
     };
 
+    // Modify the existing handleComplete function
+    const handleComplete = async () => {
+            // stopVideoRecording().then(()=>{
+            if (!voiceURL || !videoRecordingUri) {
+
+                Alert.alert('Error', 'Please complete all recordings first');
+                return;
+            }
+    
+            try {
+                const timestamp = Date.now();
+                const uid = auth.currentUser.uid;
+    
+                const voicePath = `reaction-test/${uid}/${timestamp}/voice_recording`;
+                const voiceStorageURL = await uploadToStorage(voiceURL, voicePath);
+    
+                const videoPath = `reaction-test/${uid}/${timestamp}/video_recording`;
+                const videoStorageURL = await uploadToStorage(videoRecordingUri, videoPath);
+    
+                const reactionTestRef = dbRef(database, `reaction-test/${timestamp}`);
+                
+                await set(reactionTestRef, {
+                    id_data: timestamp,
+                    date: timestamp,
+                    game_nb: 23,
+                    reactiontime: reactionTimes,
+                    voice_recording: voiceStorageURL,
+                    video_recording: videoStorageURL,
+                    userId: uid
+                });
+    
+                Alert.alert('Success', 'Test completed and uploaded successfully');
+                navigation.goBack();
+            } catch (err) {
+                Alert.alert('Upload failed', err.message);
+            }
+
+        // })
+        
+    };
+
+    const renderReactionTest = () => (
+        <View style={styles.container}>
+            <View style={styles.content}>
+                {/* <View style={styles.cameraPreview}>
+                    <CameraView
+                        style={styles.camera}
+                        ref={cameraRef}
+                        facing={cameraFacing}
+                        mode={cameraMode}
+                        zoom={cameraZoom}
+                        enableTorch={cameraTorch}
+                        flash={cameraFlash}
+                    >
+                        {renderCameraControls()}
+                    </CameraView>
+                </View> */}
+                {(renderVideoRecorder())}
+                
+                <View style={styles.circlesContainer}>
+                    <View style={styles.circleGrid}>
+                        {[...Array(TOTAL_CIRCLES)].map((_, index) => (
+                            <AnimatedCircle
+                                key={index}
+                                isActive={activeCircle === index}
+                                onPress={() => handleCirclePress(index)}
+                            />
+                        ))}
+                    </View>
+                </View>
+
+                <View style={styles.controls}>
+                    {!testStarted ? (
+                        <TouchableOpacity
+                            style={[styles.button, styles.startButton]}
+                            onPress={startReactionTest}
+                        >
+                            <Text style={styles.buttonText}>Start Reaction Test</Text>
+                        </TouchableOpacity>
+                    ) : testComplete ? (
+                        <TouchableOpacity
+                            style={[styles.button, styles.completeButton]}
+                            onPress={handleComplete}
+                        >
+                            <Text style={styles.buttonText}>Complete Test</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <Text style={styles.progressText}>
+                            Progress: {sequence}/{SEQUENCES}
+                        </Text>
+                    )}
+                </View>
+            </View>
+        </View>
+    );
+
+    // Modify the main return statement
     if (!cameraPermission || !micPermission) {
         return (
             <View style={styles.container}>
@@ -289,7 +443,7 @@ const ReactionTestScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            {!showVideoRecorder ? (
+            {!showReactionTest ? (
                 <View style={styles.recordingContainer}>
                     <Text style={styles.title}>Voice Recording</Text>
                     <Text style={styles.timer}>Time remaining: {timeLeft}s</Text>
@@ -303,13 +457,61 @@ const ReactionTestScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
             ) : (
-                renderVideoRecorder()
+                renderReactionTest()
             )}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
+    // ... [keep existing styles] ...
+    container: {
+        flex: 1,
+        backgroundColor: '#f0f0f0',
+    },
+    content: {
+        flex: 1,
+        position: 'relative',
+    },
+    cameraPreview: {
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        width: 120,
+        height: 160,
+        borderRadius: 10,
+        overflow: 'hidden',
+        zIndex: 1000,
+        borderWidth: 2,
+        borderColor: '#fff',
+    },
+    circlesContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    circleGrid: {
+        width: Dimensions.get('window').width * 0.8,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 20,
+    },
+    circleContainer: {
+        margin: 10,
+    },
+    circle: {
+        width: CIRCLE_SIZE,
+        height: CIRCLE_SIZE,
+        borderRadius: CIRCLE_SIZE / 2,
+        backgroundColor: '#00008B',
+    },
+    progressText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+    },
     container: {
         flex: 1,
         backgroundColor: '#f0f0f0',
