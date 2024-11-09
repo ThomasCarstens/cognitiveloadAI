@@ -106,9 +106,9 @@ const ReactionTestScreen = ({ navigation }) => {
             setIsRecording(true);
             setTimeLeft(60);
 
-            setTimeout(() => {
-                stopVoiceRecording();
-            }, 60000);
+            // setTimeout(() => {
+            //     stopVoiceRecording();
+            // }, 60000);
         } catch (err) {
             Alert.alert('Failed to start recording', err.message);
         }
