@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>891359673788-2h2sdj2o3vhqvoqu16g8qnrbgk212ci9.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.891359673788-2h2sdj2o3vhqvoqu16g8qnrbgk212ci9</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>891359673788-bfv214irofv5iv309utrr7dqs07vg58d.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
 	<string>AIzaSyByqcDfzS9K6zXhLDVtZIVMr24s7Pee-vE</string>
 	<key>GCM_SENDER_ID</key>
@@ -9,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.olivierdumay.appdolivier</string>
+	<string>com.thomas.fatigueai</string>
 	<key>PROJECT_ID</key>
 	<string>esculappl-france</string>
 	<key>STORAGE_BUCKET</key>
@@ -26,5 +32,7 @@
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
 	<string>1:891359673788:ios:032b800c2a963a773e7fb9</string>
+	<key>DATABASE_URL</key>
+	<string>https://esculappl-france-default-rtdb.europe-west1.firebasedatabase.app</string>
 </dict>
 </plist>

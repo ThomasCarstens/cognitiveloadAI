@@ -8,48 +8,61 @@ import { ref as ref_d, onValue } from 'firebase/database';
 
 const RechercheFormationsScreen = () => {
   const [reactionTests, setReactionTests] = useState([]);
+  const [chartData, setChartData] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const filterHeight = useState(new Animated.Value(0))[0];
   const navigation = useNavigation();
 
-  // Chart configuration
-  const chartData = {
-    labels: ['60', '70', '80'],
-    datasets: [
-      {
-        data: [60, 70, 80],
-        color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-        strokeWidth: 2,
-      },
-      {
-        data: [60, 90, 75],
-        color: (opacity = 1) => `rgba(139, 0, 0, ${opacity})`,
-        strokeWidth: 2,
-      },
-    ],
-    legend: ['Series 1', 'Series 2']
-  };
+  const processChartData = (tests) => {
+    // Sort tests by timestamp
+    const sortedTests = [...tests].sort((a, b) => parseInt(a.date) - parseInt(b.date));
 
-  const chartConfig = {
-    backgroundColor: '#111111',
-    backgroundGradientFrom: '#111111',
-    backgroundGradientTo: '#111111',
-    decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-    style: {
-      borderRadius: 16,
-    },
-    propsForDots: {
-      r: '6',
-      strokeWidth: '2',
-    }
+    // Calculate average reaction time for each test and format time
+    const processedData = sortedTests.map(test => {
+      // Calculate average reaction time
+      const reactionTimes = Object.values(test.reactiontime || {});
+      const avgTime = reactionTimes.length > 0 
+        ? reactionTimes.reduce((sum, time) => sum + parseFloat(time), 0) / reactionTimes.length
+        : 0;
+
+      // Format timestamp to hour:minute
+      const date = new Date(parseInt(test.date));
+      const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      return {
+        time: timeString,
+        avgReactionTime: Math.round(avgTime)
+      };
+    });
+
+    // Prepare data for the chart
+    const labels = processedData.map(item => item.time);
+    const data = processedData.map(item => item.avgReactionTime);
+
+    return {
+      labels,
+      datasets: [
+        {
+          data,
+          color: (opacity = 1) => `rgba(26, 83, 255, ${opacity})`, // Blue color
+          strokeWidth: 2,
+        }
+      ],
+      legend: ['Average Reaction Time (ms)']
+    };
   };
 
   useEffect(() => {
     fetchReactionTests();
     setupNavigation();
   }, []);
+
+  useEffect(() => {
+    if (reactionTests.length > 0) {
+      const newChartData = processChartData(reactionTests);
+      setChartData(newChartData);
+    }
+  }, [reactionTests]);
 
   const fetchReactionTests = () => {
     const reactionTestsRef = ref_d(database, 'reaction-test/');
@@ -64,6 +77,45 @@ const RechercheFormationsScreen = () => {
       }
     });
   };
+
+  // Chart configuration
+  const chartConfig = {
+    backgroundColor: '#111111',
+    backgroundGradientFrom: '#111111',
+    backgroundGradientTo: '#111111',
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    style: {
+      borderRadius: 16,
+    },
+    propsForDots: {
+      r: '4',
+      strokeWidth: '2',
+      stroke: '#1a53ff'
+    },
+    formatXLabel: (value) => value,
+    formatYLabel: (value) => `${value}ms`
+  };
+
+  // useEffect(() => {
+  //   fetchReactionTests();
+  //   setupNavigation();
+  // }, []);
+
+  // const fetchReactionTests = () => {
+  //   const reactionTestsRef = ref_d(database, 'reaction-test/');
+  //   onValue(reactionTestsRef, (snapshot) => {
+  //     const data = snapshot.val();
+  //     if (data) {
+  //       const testsArray = Object.entries(data).map(([key, value]) => ({
+  //         id: key,
+  //         ...value
+  //       }));
+  //       setReactionTests(testsArray);
+  //     }
+  //   });
+  // };
 
   const setupNavigation = () => {
     navigation.setOptions({
@@ -128,18 +180,24 @@ const RechercheFormationsScreen = () => {
       <Animated.View style={[styles.filtersContainer, { height: filterHeight }]}>
         <ScrollView>
           <View style={styles.graphContainer}>
-            <Text style={styles.graphTitle}>Reaction Times Analysis</Text>
-            <LineChart
-              data={chartData}
-              width={320}
-              height={220}
-              chartConfig={chartConfig}
-              bezier
-              style={{
-                marginVertical: 8,
-                borderRadius: 16,
-              }}
-            />
+            <Text style={styles.graphTitle}>Average Reaction Times Throughout the Day</Text>
+            {chartData && (
+              <LineChart
+                data={chartData}
+                width={320}
+                height={220}
+                chartConfig={chartConfig}
+                bezier
+                style={{
+                  marginVertical: 8,
+                  borderRadius: 16,
+                }}
+                withVerticalLabels={true}
+                withHorizontalLabels={true}
+                fromZero={true}
+                verticalLabelRotation={45}
+              />
+            )}
           </View>
         </ScrollView>
       </Animated.View>

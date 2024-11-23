@@ -15,8 +15,8 @@
     "ios": {
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "bundleIdentifier": "com.olivierdumay.appdolivier",
-      "buildNumber": "10"
+      "bundleIdentifier": "com.thomas.fatigueai",
+      "buildNumber": "1"
     },
     "android": {
       "icon": "./assets/images/icon.png",
@@ -24,10 +24,15 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.olivierdumay.appdolivier",
-      "versionCode": 21,
+      "package": "com.thomas.fatigueai",
+      "versionCode": 1,
       "googleServicesFile": "./google-services.json",
-      "useNextNotificationsApi": true
+      "useNextNotificationsApi": true,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "plugins": [
       [
@@ -42,7 +47,6 @@
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
         }
       ],
-    
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "@react-native-firebase/crashlytics",
@@ -69,7 +73,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "6146ee8a-bf84-4479-866c-0f6797428e33"
+        "projectId": "9e45fb1d-35ef-446a-a3d2-56b57a5a2c91"
       }
     }
   }

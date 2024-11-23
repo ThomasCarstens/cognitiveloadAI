@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "891359673788",
+    "firebase_url": "https://esculappl-france-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "esculappl-france",
     "storage_bucket": "esculappl-france.appspot.com"
   },
@@ -9,10 +10,23 @@
       "client_info": {
         "mobilesdk_app_id": "1:891359673788:android:1b1814c6eb43f5a63e7fb9",
         "android_client_info": {
-          "package_name": "com.olivierdumay.appdolivier"
+          "package_name": "com.thomas.fatigueai"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "891359673788-bfv214irofv5iv309utrr7dqs07vg58d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.thomas.fatigueai",
+            "certificate_hash": "9d2166c4e9d40e984d84574a98f0e4dc9183568f"
+          }
+        },
+        {
+          "client_id": "891359673788-k6qj5fimf367s9tsk0q9pttlcc3mclsm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAOl1F9SBcnWnDpJYw0kuwivEJ3Pf8XUWo"
@@ -20,7 +34,20 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "891359673788-k6qj5fimf367s9tsk0q9pttlcc3mclsm.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "891359673788-2h2sdj2o3vhqvoqu16g8qnrbgk212ci9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.thomas.fatigueai",
+                "app_store_id": "6642655239"
+              }
+            }
+          ]
         }
       }
     }

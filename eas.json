@@ -1,19 +1,15 @@
 {
   "cli": {
-    "version": ">= 7.3.0"
+    "version": ">= 12.6.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal"
     },
-    "playstore": {
-      "android": {
-        "buildType": "app-bundle"
-      },
-      
-      "distribution": "internal",
-      "autoIncrement": true
+    "preview": {
+      "distribution": "internal"
     },
     "production": {
       "autoIncrement": true

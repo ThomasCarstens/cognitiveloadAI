@@ -29,7 +29,6 @@ exports.onReactionTestVideoUpload = onValueCreated({
   }
 
   const tempFilePath = path.join(tmpdir(), `input-${reactionTestId}.mp4`);
-  const intermediateFilePath = path.join(tmpdir(), `normalized-${reactionTestId}.mp4`);
   const outputFilePath = path.join(tmpdir(), `output-${reactionTestId}.mp4`);
 
   try {
@@ -47,76 +46,57 @@ exports.onReactionTestVideoUpload = onValueCreated({
 
     // Get video dimensions
     const videoInfo = await getVideoInfo(tempFilePath);
-    console.log('Original video info:', videoInfo);
+    const { width, height } = videoInfo;
 
-    // First pass: Normalize the video to ensure consistent format
+    // Validate dimensions
+    if (!width || !height || width <= 0 || height <= 0) {
+      throw new Error('Invalid video dimensions detected');
+    }
+
+    // Calculate crop dimensions with validation
+    const cropHeight = Math.max(Math.floor(height * 0.4), 1); // Ensure at least 1px height
+    const topOffset = Math.min(Math.floor(height * 0.3), height - cropHeight); // Ensure offset doesn't exceed bounds
+
+    console.log('Crop dimensions:', {
+      originalWidth: width,
+      originalHeight: height,
+      cropHeight: cropHeight,
+      topOffset: topOffset
+    });
+
+    // Process the video with more specific filter settings
     await new Promise((resolve, reject) => {
       ffmpeg(tempFilePath)
         .outputOptions([
-          '-y',
-          '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', // Ensure even dimensions
-          '-c:v', 'libx264',
-          '-preset', 'ultrafast',
-          '-c:a', 'aac'
-        ])
-        .output(intermediateFilePath)
-        .on('start', (commandLine) => {
-          console.log('First pass FFmpeg command:', commandLine);
-        })
-        .on('error', (err, stdout, stderr) => {
-          console.error('First pass FFmpeg stderr:', stderr);
-          reject(new Error(`First pass FFmpeg error: ${err.message}`));
-        })
-        .on('end', () => {
-          console.log('First pass completed successfully');
-          resolve();
-        })
-        .run();
-    });
-
-    // Get normalized video dimensions
-    const normalizedInfo = await getVideoInfo(intermediateFilePath);
-    console.log('Normalized video info:', normalizedInfo);
-    
-    const { width, height } = normalizedInfo;
-    const cropHeight = Math.floor(height * 0.4);
-    const topOffset = Math.floor(height * 0.3);
-
-    // Second pass: Apply the crop
-    await new Promise((resolve, reject) => {
-      ffmpeg(intermediateFilePath)
-        .outputOptions([
-          '-y',
-          '-vf', `crop=${width}:${cropHeight}:0:${topOffset}`,
-          '-c:v', 'libx264',
-          '-preset', 'ultrafast',
-          '-c:a', 'aac'
+          '-y', // Overwrite output files without asking
+          '-filter:v', `crop=${width}:${cropHeight}:0:${topOffset}`,
+          '-c:a copy' // Copy audio stream without re-encoding
         ])
         .output(outputFilePath)
         .on('start', (commandLine) => {
-          console.log('Second pass FFmpeg command:', commandLine);
+          console.log('FFmpeg command:', commandLine);
         })
         .on('progress', (progress) => {
           console.log('Processing: ' + progress.percent + '% done');
         })
-        .on('error', (err, stdout, stderr) => {
-          console.error('Second pass FFmpeg stderr:', stderr);
-          reject(new Error(`Second pass FFmpeg error: ${err.message}`));
-        })
         .on('end', () => {
-          console.log('Second pass completed successfully');
+          console.log('FFmpeg processing finished successfully');
           resolve();
+        })
+        .on('error', (err, stdout, stderr) => {
+          console.error('FFmpeg stderr:', stderr);
+          reject(new Error(`FFmpeg error: ${err.message}`));
         })
         .run();
     });
 
-    // Verify the output file
+    // Verify the output file exists and has size > 0
     const stats = fs.statSync(outputFilePath);
     if (stats.size === 0) {
       throw new Error('Output file is empty');
     }
 
-    // Upload the processed video
+    // Upload the processed video back to Storage
     await bucket.upload(outputFilePath, {
       destination: videoPath,
       metadata: {
@@ -127,31 +107,27 @@ exports.onReactionTestVideoUpload = onValueCreated({
       }
     });
 
-    // Clean up
-    [tempFilePath, intermediateFilePath, outputFilePath].forEach(file => {
-      if (fs.existsSync(file)) {
-        fs.unlinkSync(file);
-      }
-    });
+    // Clean up temporary files
+    if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
+    if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
 
     console.log('Video processing completed successfully');
+    
     await admin.database().ref(`reaction-test/${reactionTestId}/video_processed`).set(true);
 
   } catch (error) {
     console.error('Error processing video:', error);
     
-    // Clean up
-    [tempFilePath, intermediateFilePath, outputFilePath].forEach(file => {
-      if (fs.existsSync(file)) {
-        fs.unlinkSync(file);
-      }
-    });
+    // Clean up temporary files in case of error
+    if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
+    if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
 
     await admin.database().ref(`reaction-test/${reactionTestId}/video_processed`).set(false);
     await admin.database().ref(`reaction-test/${reactionTestId}/processing_error`).set(error.message);
   }
 });
 
+// Helper function to get video dimensions with validation
 function getVideoInfo(filePath) {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(filePath, (err, metadata) => {
@@ -166,23 +142,14 @@ function getVideoInfo(filePath) {
         return;
       }
 
-      const width = parseInt(videoStream.width);
-      const height = parseInt(videoStream.height);
-      const duration = parseFloat(videoStream.duration);
-      const frameRate = eval(videoStream.r_frame_rate);
-
-      if (!width || !height || width <= 0 || height <= 0) {
+      if (!videoStream.width || !videoStream.height) {
         reject(new Error('Invalid video dimensions'));
         return;
       }
 
       resolve({
-        width,
-        height,
-        duration,
-        frameRate,
-        codec: videoStream.codec_name,
-        pixelFormat: videoStream.pix_fmt
+        width: videoStream.width,
+        height: videoStream.height
       });
     });
   });
