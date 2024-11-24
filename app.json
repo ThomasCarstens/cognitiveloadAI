@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Fatigue AI",
-    "slug": "fatigue-ai",
+    "name": "Self-Care AI",
+    "slug": "self-care-ai",
     "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

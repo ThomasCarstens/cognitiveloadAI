@@ -318,46 +318,71 @@ const ReactionTestScreen = ({ navigation }) => {
         );
     };
 
-    // Modify the existing handleComplete function
     const handleComplete = async () => {
-            // stopVideoRecording().then(()=>{
-            if (!voiceURL || !videoRecordingUri) {
-
-                Alert.alert('Error', 'Please complete all recordings first');
-                return;
-            }
+        if (!voiceURL || !videoRecordingUri) {
+            Alert.alert('Error', 'Please complete all recordings first');
+            return;
+        }
     
-            try {
-                const timestamp = Date.now();
-                const uid = auth.currentUser.uid;
+        try {
+            const timestamp = Date.now();
+            const uid = auth.currentUser.uid;
     
-                const voicePath = `reaction-test/${uid}/${timestamp}/voice_recording`;
-                const voiceStorageURL = await uploadToStorage(voiceURL, voicePath);
+            const voicePath = `reaction-test/${uid}/${timestamp}/voice_recording`;
+            const voiceStorageURL = await uploadToStorage(voiceURL, voicePath);
     
-                const videoPath = `reaction-test/${uid}/${timestamp}/video_recording`;
-                const videoStorageURL = await uploadToStorage(videoRecordingUri, videoPath);
+            const videoPath = `reaction-test/${uid}/${timestamp}/video_recording`;
+            const videoStorageURL = await uploadToStorage(videoRecordingUri, videoPath);
     
-                const reactionTestRef = dbRef(database, `reaction-test/${timestamp}`);
-                
-                await set(reactionTestRef, {
-                    id_data: timestamp,
-                    date: timestamp,
-                    game_nb: 23,
-                    reactiontime: reactionTimes,
-                    voice_recording: voiceStorageURL,
-                    video_recording: videoStorageURL,
-                    userId: uid
-                });
+            const reactionTestRef = dbRef(database, `reaction-test/${timestamp}`);
+            
+            await set(reactionTestRef, {
+                id_data: timestamp,
+                date: timestamp,
+                game_nb: 23,
+                reactiontime: reactionTimes,
+                voice_recording: voiceStorageURL,
+                video_recording: videoStorageURL,
+                userId: uid
+            });
     
-                Alert.alert('Success', 'Test completed and uploaded successfully');
-                navigation.goBack();
-            } catch (err) {
-                Alert.alert('Upload failed', err.message);
-            }
-
-        // })
-        
+            Alert.alert('Success', 'Test completed and uploaded successfully', [
+                {
+                    text: 'OK',
+                    onPress: resetTestState
+                }
+            ]);
+        } catch (err) {
+            Alert.alert('Upload failed', err.message, [
+                {
+                    text: 'OK',
+                    onPress: resetTestState
+                }
+            ]);
+        }
     };
+
+    // Add this new function to handle all the state resets
+const resetTestState = () => {
+    // Reset all test-related states
+    setShowReactionTest(false);
+    setTestStarted(false);
+    setTestComplete(false);
+    setReactionTimes([]);
+    setSequence(0);
+    setActiveCircle(null);
+    
+    // Reset recording states
+    setVoiceURL(null);
+    setVideoRecordingUri(null);
+    setIsRecording(false);
+    setTimeLeft(60);
+    
+    // Reset recording objects
+    setRecording(null);
+    
+    // Since we're returning to voice recording, we don't navigate back
+}
 
     const renderReactionTest = () => (
         <View style={styles.container}>
