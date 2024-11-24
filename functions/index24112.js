@@ -1,6 +1,5 @@
 const functions = require('firebase-functions');
 const admin = require("firebase-admin");
-const fetch = require('node-fetch');  // Make sure to add this dependency
 admin.initializeApp();
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
@@ -12,49 +11,6 @@ const {onValueCreated} = require("firebase-functions/v2/database");
 // Set ffmpeg path
 ffmpeg.setFfmpegPath(ffmpeg_static);
 
-// ML Server configuration
-const ML_SERVER_URL = 'YOUR_ML_SERVER_URL'; // Replace with actual ML server URL
-
-async function processMlData(reactionTestData) {
-  try {
-    // Prepare the input data for ML processing
-    const mlInputData = {
-      id_data: reactionTestData.id,
-      date: reactionTestData.timestamp,
-      rhythmtype: reactionTestData.rhythmtype,
-      reactiontime: reactionTestData.reactiontime,
-      self_report: reactionTestData.selfReport,
-      voice_recording: reactionTestData.voice_recording,
-      video_recording: reactionTestData.video_recording
-    };
-
-    // Make API call to ML server
-    const response = await fetch(ML_SERVER_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(mlInputData)
-    });
-
-    if (!response.ok) {
-      throw new Error(`ML Server responded with status: ${response.status}`);
-    }
-
-    const mlProcessedData = await response.json();
-
-    // Store the processed data in the database
-    await admin.database()
-      .ref(`/data_processed/${mlProcessedData.id_processed}`)
-      .set(mlProcessedData);
-
-    return mlProcessedData;
-  } catch (error) {
-    console.error('Error processing ML data:', error);
-    throw error;
-  }
-}
-
 exports.onReactionTestVideoUpload = onValueCreated({
   ref: "/reaction-test/{reactionTestId}",
   instance: "esculappl-france-default-rtdb",
@@ -64,6 +20,8 @@ exports.onReactionTestVideoUpload = onValueCreated({
   const reactionTestId = event.params.reactionTestId;
   const data = event.data.val();
   const userId = data.userId;
+  console.log('video path is ', data);
+  console.log('reactiontestId is ', reactionTestId);
 
   if (!data.video_recording) {
     console.log('No video recording found');
@@ -75,16 +33,9 @@ exports.onReactionTestVideoUpload = onValueCreated({
   const outputFilePath = path.join(tmpdir(), `output-${reactionTestId}.mp4`);
 
   try {
-    // First, process the data through ML server
-    console.log('Starting ML processing for reaction test:', reactionTestId);
-    const mlProcessedData = await processMlData(data);
-    console.log('ML processing completed:', mlProcessedData.id_processed);
-
-    // Then proceed with video processing
     const bucket = admin.storage().bucket();
     const videoPath = `reaction-test/${userId}/${reactionTestId}/video_recording`;
 
-    console.log('Starting video processing');
     console.log('videoPath', videoPath);
     console.log('tempFilePath', tempFilePath);
     console.log('outputFilePath', outputFilePath);
@@ -98,12 +49,12 @@ exports.onReactionTestVideoUpload = onValueCreated({
     const videoInfo = await getVideoInfo(tempFilePath);
     console.log('Original video info:', videoInfo);
 
-    // First pass: Normalize the video
+    // First pass: Normalize the video to ensure consistent format
     await new Promise((resolve, reject) => {
       ffmpeg(tempFilePath)
         .outputOptions([
           '-y',
-          '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+          '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', // Ensure even dimensions
           '-c:v', 'libx264',
           '-preset', 'ultrafast',
           '-c:a', 'aac'
@@ -187,7 +138,7 @@ exports.onReactionTestVideoUpload = onValueCreated({
     await admin.database().ref(`reaction-test/${reactionTestId}/video_processed`).set(true);
 
   } catch (error) {
-    console.error('Error in processing:', error);
+    console.error('Error processing video:', error);
     
     // Clean up
     [tempFilePath, intermediateFilePath, outputFilePath].forEach(file => {
