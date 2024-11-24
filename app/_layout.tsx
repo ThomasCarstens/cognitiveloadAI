@@ -148,27 +148,29 @@ function App() {
     return (
       <Tab.Navigator screenOptions={({ route }) => ({
         tabBarStyle:  {
-          backgroundColor: '#1a53ff',
+          backgroundColor: '#00E5FF',
       },
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
   
-          if (route.name === 'RechercheFormations') {
-            iconName = focused ? 'search' : 'search';
+          if (route.name === 'Dashboard') {
+            iconName = focused ? 'speedometer' : 'speedometer';
           } else if (route.name === 'Notifications') {
-            iconName = focused ? 'notifications' : 'notifications';
+            iconName = focused ? 'time' : 'time';
           } else if (route.name === 'ReactionTest') {
-            iconName = focused ? 'information-circle-outline' : 'information-circle-outline';
+            iconName = focused ? 'flask' : 'flask';
           }
           // You can return any component that you like here!
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: 'white',
+        tabBarActiveTintColor: '#5A5A5A',
         tabBarInactiveTintColor: 'black',
       })}>
+        <Tab.Screen name="ReactionTest" component={ReactionTestScreen} initialParams={{"gameFileContext": gameFileContext}}/>
+
         <Tab.Screen name="Dashboard" component={DashboardScreen} initialParams={{spoofLoggedIn: true, spoofFormateur: false, spoofAdmin: false, spoofValidated: true}}/>
         <Tab.Screen name="Notifications" component={NotifsScreen} initialParams={{"gameFileContext": gameFileContext}}/>
-        <Tab.Screen name="ReactionTest" component={ReactionTestScreen} initialParams={{"gameFileContext": gameFileContext}}/>
+
       </Tab.Navigator>
     );
   }

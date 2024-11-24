@@ -4,210 +4,307 @@ import {
   Text,
   StyleSheet,
   Image,
-  ActivityIndicator,
+  TouchableOpacity,
   Dimensions,
-  Animated,
+  SafeAreaView,
+  Platform,
 } from 'react-native';
+import { ref, onValue } from 'firebase/database';
 import { database } from '../../firebase';
-import { ref, onValue, query, orderByKey, limitToLast } from 'firebase/database';
+import { useNavigation } from '@react-navigation/native';
+
 
 const { width, height } = Dimensions.get('window');
-const AVATAR_SIZE = width * 0.3;
-const METRIC_SIZE = width * 0.22;
 
-export default function DashboardScreen() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(null);
-  const fadeAnim = new Animated.Value(0);
+const FatigueDashboard = ({ userId = "iWZ5nUDp86X5bW1k9GsfR6iJIkh1" }) => {
+  const [fatigueData, setFatigueData] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const navigation = useNavigation();
 
   useEffect(() => {
-    console.log('Starting data fetch...');
-    const dataRef = query(
-      ref(database, 'data_processed'),
-      orderByKey(),
-      limitToLast(1)
-    );
-
-    const unsubscribe = onValue(dataRef, (snapshot) => {
-      console.log('Snapshot exists:', snapshot.exists());
-      if (snapshot.exists()) {
-        const latestData = Object.values(snapshot.val())[0];
-        console.log('Latest data:', latestData);
-        setData(latestData);
-        setLoading(false);
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }).start();
-      } else {
-        console.log('No data found');
-        setLoading(false);
-      }
+    navigation.setOptions({
+      headerShown: true,
+      title: 'My Health',
+      headerStyle: {
+        backgroundColor: '#00E5FF',
+      },
+      headerTitleStyle: {
+        fontWeight: 'bold',
+        color: '#000', // Set title color to black
+      },
+      headerTintColor: '#000',
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+      // headerRight: () => (
+      //   <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+      //     <Text style={styles.logoutButtonText}>Se déconnecter</Text>
+      //   </TouchableOpacity>
+      // ),
     });
+  }, [navigation]);
+  useEffect(() => {
+    console.log('Starting data fetch from Firebase...');
+    const dataRef = ref(database, 'data_processed/');
+    
+    onValue(dataRef, (snapshot) => {
+      console.log('Firebase snapshot received:', snapshot.exists());
+      
+      const data = snapshot.val();
+      console.log('Raw data from Firebase:', data);
+      
+      if (data) {
+        const userTests = Object.values(data)
+          .filter(test => test.userId === userId)
+          .sort((a, b) => parseInt(a.id_data) - parseInt(b.id_data));
+        
+        console.log('Filtered data for userId:', userId);
+        console.log('Number of tests found:', userTests.length);
+        console.log('Processed user tests:', userTests);
+        
+        setFatigueData(userTests);
+      } else {
+        console.log('No data received from Firebase');
+      }
+    }, (error) => {
+      console.error('Firebase data fetch error:', error);
+    });
+  }, [userId]);
+  
+  // Add a log after state updates
+  useEffect(() => {
+    console.log('Current fatigue data state:', fatigueData);
+    console.log('Current index:', currentIndex);
+  }, [fatigueData, currentIndex]);
 
-    return () => unsubscribe();
-  }, []);
-
-  const MetricBubble = ({ value, label, style }) => (
-    <Animated.View style={[styles.metricBubble, style]}>
-      <Text style={styles.metricValue}>
-        {typeof value === 'number' ? value.toFixed(2) : '---'}
-      </Text>
-      <Text style={styles.metricLabel}>{label}</Text>
-    </Animated.View>
-  );
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#00E5FF" />
-      </View>
+  const handlePrevious = () => {
+    setCurrentIndex(current => 
+      current > 0 ? current - 1 : fatigueData.length - 1
     );
-  }
-
-  // Debug data
-  const testData = {
-    blink_rate: 3,
-    estimated_llm_fatigue: 0.44,
-    estimated_speechspeed_fatigue: 0.77,
-    self_report: 0.55,
-    reactiontime: { 0: 300, 1: 33, 2: 493 },
-    saccade_velocities: { 0: 220, 1: 233, 2: 328 }
   };
 
-  // Use testData for debugging, switch to real data later
-  const displayData = data || testData;
+  const handleNext = () => {
+    setCurrentIndex(current => 
+      current < fatigueData.length - 1 ? current + 1 : 0
+    );
+  };
 
-  const avgReactionTime = displayData?.reactiontime
-    ? Object.values(displayData.reactiontime).reduce((a, b) => a + b, 0) / 
-      Object.values(displayData.reactiontime).length
-    : 0;
+  const currentData = fatigueData[currentIndex];
 
-  const avgSaccadeVelocity = displayData?.saccade_velocities
-    ? Object.values(displayData.saccade_velocities).reduce((a, b) => a + b, 0) / 
-      Object.values(displayData.saccade_velocities).length
-    : 0;
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.metricsContainer}>
-        {/* Top Row */}
-        <View style={styles.row}>
-          <MetricBubble
-            value={displayData?.blink_rate}
-            label="Blink Rate"
-            style={styles.metric}
-          />
-        </View>
-
-        {/* Middle Row */}
-        <View style={styles.row}>
-          <MetricBubble
-            value={displayData?.estimated_llm_fatigue}
-            label="LLM Fatigue"
-            style={styles.metric}
-          />
-          
-          {/* Center Avatar */}
-          <View style={styles.avatarContainer}>
-            <Image
-              source={require('../../assets/images/stick_avatar.png')}
-              style={styles.avatar}
-            />
-          </View>
-          
-          <MetricBubble
-            value={displayData?.estimated_speechspeed_fatigue}
-            label="Speech Fatigue"
-            style={styles.metric}
-          />
-        </View>
-
-        {/* Bottom Row */}
-        <View style={styles.row}>
-          <MetricBubble
-            value={avgSaccadeVelocity}
-            label="Saccade Velocity"
-            style={styles.metric}
-          />
-          <MetricBubble
-            value={avgReactionTime}
-            label="Reaction Time"
-            style={styles.metric}
-          />
-        </View>
-
-        {/* Bottom Metric */}
-        <View style={styles.row}>
-          <MetricBubble
-            value={displayData?.self_report}
-            label="Self Report"
-            style={styles.metric}
-          />
-        </View>
-      </View>
+  const FatigueLabel = ({ style, value, label }) => (
+    <View style={[styles.fatigueLabel, style]}>
+      <Text style={styles.fatigueLabelText}>{label}</Text>
+      <Text style={styles.fatigueLabelValue}>
+        {(value * 100).toFixed(0)}%
+      </Text>
     </View>
   );
-}
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      {/* <View style={styles.header}>
+        <Text style={styles.headerText}>Dashboard</Text>
+      </View> */}
+
+
+
+      {/* Main Content */}
+      <View style={styles.mainContent}>
+        <Image
+          source={require('../../assets/images/zion_avatar.png')}
+          style={styles.backgroundImage}
+          resizeMode="contain"
+        />
+
+        {currentData && (
+          <>
+            <FatigueLabel
+              style={styles.llmLabel}
+              value={currentData.estimated_llm_fatigue}
+              label="LLM Fatigue"
+            />
+            <FatigueLabel
+              style={styles.saccadeLabel}
+              value={currentData.estimated_saccade_fatigue}
+              label="Saccade Fatigue"
+            />
+            <FatigueLabel
+              style={styles.speechLabel}
+              value={currentData.estimated_speechspeed_fatigue}
+              label="Speech Speed Fatigue"
+            />
+          </>
+        )}
+
+        {/* Navigation Arrows */}
+        <View style={styles.navigationControls}>
+          <TouchableOpacity 
+            style={styles.navButton} 
+            onPress={handlePrevious}
+          >
+            <Text style={styles.navButtonText}>←</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.navButton} 
+            onPress={handleNext}
+          >
+            <Text style={styles.navButtonText}>→</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      {/* Analysis Card */}
+      <View style={styles.analysisCard}>
+        <Text style={styles.analysisTitle}>Cognitive Load Analysis</Text>
+        {/* <Text style={styles.analysisSubtitle}>Subject: Anonymous</Text> */}
+        <Text style={styles.analysisSubtitle}>
+          Date: {currentData ? new Date(parseInt(currentData.id_data)).toLocaleString() : 'Loading...'}
+        </Text>
+      </View>
+      {/* Bottom Navigation */}
+      {/* <View style={styles.bottomNav}>
+        <View style={styles.bottomNavItem}>
+          <Text style={[styles.bottomNavText, styles.activeNavItem]}>Dashboard</Text>
+        </View>
+        <View style={styles.bottomNavItem}>
+          <Text style={styles.bottomNavText}>Mes notifications</Text>
+        </View>
+        <View style={styles.bottomNavItem}>
+          <Text style={styles.bottomNavText}>ReactionTest</Text>
+        </View>
+      </View> */}
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#f5f5f5',
   },
-  metricsContainer: {
+  header: {
+    backgroundColor: '#00CED1',
+    padding: 16,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  analysisCard: {
+    backgroundColor: '#1F2937',
+    margin: 12,
+    padding: 16,
+    borderRadius: 12,
+  },
+  analysisTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#00CED1',
+    marginBottom: 8,
+  },
+  analysisSubtitle: {
+    fontSize: 14,
+    color: '#D1D5DB',
+  },
+  mainContent: {
     flex: 1,
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    paddingVertical: 20,
+    position: 'relative',
+    margin: 12,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 12,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
+  backgroundImage: {
     width: '100%',
-    padding: 10,
+    height: '100%',
+    position: 'absolute',
+    opacity: 1,
   },
-  avatarContainer: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
-    backgroundColor: '#2A2A2A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#00E5FF',
-    margin: 10,
+  fatigueLabel: {
+    position: 'absolute',
+    backgroundColor: '#00CED1',
+    padding: 12,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  avatar: {
-    width: AVATAR_SIZE * 0.8,
-    height: AVATAR_SIZE * 0.8,
-    tintColor: '#00E5FF',
+  fatigueLabelText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
-  metricBubble: {
-    width: METRIC_SIZE,
-    height: METRIC_SIZE,
-    borderRadius: METRIC_SIZE / 2,
-    backgroundColor: '#2A2A2A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#00E5FF',
-    margin: 5,
-  },
-  metric: {
-    margin: 5,
-  },
-  metricValue: {
-    color: '#00E5FF',
+  fatigueLabelValue: {
+    color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  metricLabel: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    marginTop: 4,
-    textAlign: 'center',
+  llmLabel: {
+    right: '10%',
+    top: '35%',
+  },
+  saccadeLabel: {
+    right: '5%',
+    top: '5%',
+  },
+  speechLabel: {
+    left: '5%',
+    top: '55%',
+  },
+  navigationControls: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  navButton: {
+    backgroundColor: '#00CED1',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
+  },
+  navButtonText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#2563EB',
+    padding: 16,
+    justifyContent: 'space-around',
+  },
+  bottomNavItem: {
+    alignItems: 'center',
+  },
+  bottomNavText: {
+    color: 'white',
+    opacity: 0.5,
+  },
+  activeNavItem: {
+    opacity: 1,
   },
 });
+
+export default FatigueDashboard;

@@ -49,6 +49,29 @@ const ReactionTestScreen = ({ navigation }) => {
     const testInterval = useRef(null);
 
     useEffect(() => {
+        navigation.setOptions({
+          headerShown: true,
+          title: 'Do a Test',
+          headerStyle: {
+            backgroundColor: '#00E5FF',
+          },
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            color: '#000', // Set title color to black
+          },
+          headerTintColor: '#000',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+          // headerRight: () => (
+          //   <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          //     <Text style={styles.logoutButtonText}>Se déconnecter</Text>
+          //   </TouchableOpacity>
+          // ),
+        });
+      }, [navigation]);
+
+    useEffect(() => {
         const setupPermissions = async () => {
             if (!cameraPermission?.granted) {
                 await requestCameraPermission();
