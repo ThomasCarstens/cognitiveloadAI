@@ -23,16 +23,6 @@ import { getAnalytics } from "firebase/analytics";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
-// const firebaseConfig = {
-//   apiKey: "AIzaSyAdIS3ti6i-cWjBcKm3_9-nBhW61F7bgxg",
-//   authDomain: "appdolivier.firebaseapp.com",
-//   projectId: "appdolivier",
-//   storageBucket: "appdolivier.appspot.com",
-//   messagingSenderId: "349759213253",
-//   appId: "1:349759213253:web:b973f229c611c64a756aac",
-//   measurementId: "G-YTQQ4TDLMF",
-//   databaseURL: 'https://appdolivier-default-rtdb.europe-west1.firebasedatabase.app'
-// };
 const firebaseConfig = {
 
   apiKey: "AIzaSyDMq52yFXZrieExEY3IYyoT3mlJpVE5wIs",

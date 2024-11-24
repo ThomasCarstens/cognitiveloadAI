@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:891359673788:android:1b1814c6eb43f5a63e7fb9",
         "android_client_info": {
-          "package_name": "com.thomas.fatigueai"
+          "package_name": "com.thomas.nirvana_ai"
         }
       },
       "oauth_client": [
@@ -18,7 +18,7 @@
           "client_id": "891359673788-bfv214irofv5iv309utrr7dqs07vg58d.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.thomas.fatigueai",
+            "package_name": "com.thomas.nirvana_ai",
             "certificate_hash": "9d2166c4e9d40e984d84574a98f0e4dc9183568f"
           }
         },
@@ -43,7 +43,7 @@
               "client_id": "891359673788-2h2sdj2o3vhqvoqu16g8qnrbgk212ci9.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.thomas.fatigueai",
+                "bundle_id": "com.thomas.nirvana_ai",
                 "app_store_id": "6642655239"
               }
             }

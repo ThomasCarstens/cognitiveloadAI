@@ -27,6 +27,7 @@ import NotifsScreenSkeleton from './skeleton/NotifsScreenSkeleton';
 import NotificationExplanationScreen from './screens/NotificationExplanationScreen';
 import AccountDeletionScreen from './screens/AccountDeletionScreen';
 import ReactionTestScreen from './screens/ReactionTestScreen';
+import DashboardScreen from './(tabs)/DashboardScreen';
 
 // import ProfilScreen from './(tabs)/ProfilScreen';
 // import DemandesProfilsScreen from './(tabs)/DemandesProfilsScreen';
@@ -165,7 +166,7 @@ function App() {
         tabBarActiveTintColor: 'white',
         tabBarInactiveTintColor: 'black',
       })}>
-        <Tab.Screen name="RechercheFormations" component={RechercheFormationsScreen} initialParams={{spoofLoggedIn: true, spoofFormateur: false, spoofAdmin: false, spoofValidated: true}}/>
+        <Tab.Screen name="Dashboard" component={DashboardScreen} initialParams={{spoofLoggedIn: true, spoofFormateur: false, spoofAdmin: false, spoofValidated: true}}/>
         <Tab.Screen name="Notifications" component={NotifsScreen} initialParams={{"gameFileContext": gameFileContext}}/>
         <Tab.Screen name="ReactionTest" component={ReactionTestScreen} initialParams={{"gameFileContext": gameFileContext}}/>
       </Tab.Navigator>

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Self-Care AI",
-    "slug": "self-care-ai",
+    "name": "Nirvana AI",
+    "slug": "nirvana-ai",
     "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "bundleIdentifier": "com.thomas.fatigueai",
+      "bundleIdentifier": "com.txa.nirvanaai",
       "buildNumber": "1"
     },
     "android": {
@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.thomas.fatigueai",
+      "package": "com.thomas.nirvana_ai",
       "versionCode": 1,
       "googleServicesFile": "./google-services.json",
       "useNextNotificationsApi": true,
@@ -73,7 +73,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "9e45fb1d-35ef-446a-a3d2-56b57a5a2c91"
+        "projectId": "2137c841-73c2-4bfe-bc50-aec229c8e9ec"
       }
     }
   }
