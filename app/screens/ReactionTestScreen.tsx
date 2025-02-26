@@ -81,11 +81,11 @@ const ReactionTestScreen = ({ navigation }) => {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-          // headerRight: () => (
-          //   <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          //     <Text style={styles.logoutButtonText}>Se déconnecter</Text>
-          //   </TouchableOpacity>
-          // ),
+          headerRight: () => (
+            <TouchableOpacity style={styles.logoutButton}>
+              <Text style={styles.logoutButtonText}>Se déconnecter</Text>
+            </TouchableOpacity>
+          ),
         });
       }, [navigation]);
     useEffect(() => {
@@ -634,6 +634,13 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    logoutButton: {
+        marginRight: 10,
+      },
+      logoutButtonText: {
+        color: '#fff',
+        fontSize: 16,
+      }
 });
 
 export default ReactionTestScreen;

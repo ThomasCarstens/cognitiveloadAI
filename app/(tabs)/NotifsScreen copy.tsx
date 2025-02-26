@@ -1,57 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Switch, ScrollView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Switch, Animated, ScrollView } from 'react-native';
 import { ref as ref_d, onValue, update } from 'firebase/database';
 import { database, auth } from '../../firebase';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const NotificationCenter = ({ isAdmin, isFormateur }) => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: '1',
-      title: 'Time for Rest',
-      body: 'Optimal sleep window approaching. Aim for 7-9 hours tonight.',
-      icon: 'moon',
-      timestamp: new Date().getTime() - 5 * 60000,
-      priority: 'high'
-    },
-    {
-      id: '2',
-      title: 'Vitamin D Break',
-      body: 'Take a 10-minute walk in natural sunlight for better mood and energy.',
-      icon: 'sunny',
-      timestamp: new Date().getTime() - 15 * 60000
-    },
-    {
-      id: '3',
-      title: 'Hydration Check',
-      body: 'Drink a glass of water (4/8 daily goal completed)',
-      icon: 'water',
-      timestamp: new Date().getTime() - 30 * 60000
-    },
-    {
-      id: '4',
-      title: 'Screen Break Due',
-      body: 'Look 20 feet away for 20 seconds to reduce eye strain',
-      icon: 'eye',
-      timestamp: new Date().getTime() - 45 * 60000
-    },
-    {
-      id: '5',
-      title: 'Take Your Vitamins',
-      body: 'Time for your daily supplements (B12, D3, Omega-3)',
-      icon: 'medical',
-      timestamp: new Date().getTime() - 60 * 60000
-    },
-    {
-      id: '6',
-      title: 'Reaction Test Required',
-      body: 'Complete your daily cognitive assessment to improve predictions',
-      icon: 'fitness',
-      timestamp: new Date().getTime() - 90 * 60000
-    }
-  ]);
+const NotificationList = ({ isAdmin, isFormateur }) => {
+  const [notifications, setNotifications] = useState([]);
   const [isListening, setIsListening] = useState(true);
   const [lastTestDate, setLastTestDate] = useState(null);
   const [testStats, setTestStats] = useState({
@@ -59,13 +15,65 @@ const NotificationCenter = ({ isAdmin, isFormateur }) => {
     lastWeek: 0,
     lastMonth: 0
   });
-  const [nextNotificationTime, setNextNotificationTime] = useState(new Date(Date.now() + 3600000));
+  const [nextNotificationTime, setNextNotificationTime] = useState(null);
   
   const navigation = useNavigation();
 
   useEffect(() => {
     const userId = auth.currentUser?.uid;
     
+    // Fetch notifications
+    const notificationsRef = ref_d(database, '/notification-panel/');
+    const testsRef = ref_d(database, `/users/${userId}/reactionTests`);
+    
+    // Listen for notifications
+    const notificationUnsubscribe = onValue(notificationsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const filteredNotifications = Object.entries(data)
+          .filter(([_, notification]) => notification.received && notification.received[userId])
+          .map(([id, notification]) => ({
+            id,
+            ...notification,
+            formationId: notification.id,
+          }))
+          .sort((a, b) => b.timestamp - a.timestamp);
+        setNotifications(filteredNotifications);
+      }
+    });
+
+    // Listen for test data
+    const testUnsubscribe = onValue(testsRef, (snapshot) => {
+      const testData = snapshot.val();
+      if (testData) {
+        // Find last test date
+        const dates = Object.values(testData).map(test => test.timestamp);
+        const lastTest = Math.max(...dates);
+        setLastTestDate(new Date(lastTest));
+
+        // Calculate test counts for different periods
+        const now = Date.now();
+        const threeDaysAgo = now - (3 * 24 * 60 * 60 * 1000);
+        const weekAgo = now - (7 * 24 * 60 * 60 * 1000);
+        const monthAgo = now - (30 * 24 * 60 * 60 * 1000);
+
+        const stats = {
+          last3Days: Object.values(testData).filter(test => test.timestamp > threeDaysAgo).length,
+          lastWeek: Object.values(testData).filter(test => test.timestamp > weekAgo).length,
+          lastMonth: Object.values(testData).filter(test => test.timestamp > monthAgo).length
+        };
+        setTestStats(stats);
+      }
+    });
+
+    // Calculate next notification time (example: every 3 hours)
+    const calculateNextNotification = () => {
+      const now = new Date();
+      const next = new Date(now.setHours(now.getHours() + 3));
+      setNextNotificationTime(next);
+    };
+    calculateNextNotification();
+
     // Set up navigation options
     navigation.setOptions({
       headerShown: true,
@@ -84,22 +92,23 @@ const NotificationCenter = ({ isAdmin, isFormateur }) => {
       ),
     });
 
-    // Simulate fetching test data
-    const testsRef = ref_d(database, `/users/${userId}/reactionTests`);
-    const unsubscribe = onValue(testsRef, (snapshot) => {
-      const testData = snapshot.val();
-      if (testData) {
-        setLastTestDate(new Date(Math.max(...Object.values(testData).map(test => test.timestamp))));
-        setTestStats({
-          last3Days: 0,
-          lastWeek: 0,
-          lastMonth: 0
-        });
-      }
-    });
-
-    return () => unsubscribe();
+    return () => {
+      notificationUnsubscribe();
+      testUnsubscribe();
+    };
   }, [navigation]);
+
+  const calculatePredictionQuality = () => {
+    // Simple algorithm to estimate prediction quality
+    const qualityScore = (testStats.last3Days * 0.5) + 
+                        (testStats.lastWeek * 0.3) + 
+                        (testStats.lastMonth * 0.2);
+    
+    if (qualityScore > 20) return 'Excellent';
+    if (qualityScore > 10) return 'Good';
+    if (qualityScore > 5) return 'Fair';
+    return 'Poor';
+  };
 
   const handleLogout = async () => {
     try {
@@ -113,49 +122,39 @@ const NotificationCenter = ({ isAdmin, isFormateur }) => {
 
   const toggleListening = () => {
     setIsListening(!isListening);
+    // Here you would typically update the listening status in the database
     const userId = auth.currentUser?.uid;
     update(ref_d(database, `users/${userId}`), { isListening: !isListening });
   };
 
   const renderNotification = ({ item }) => (
     <TouchableOpacity
-      style={[styles.notificationItem, item.priority === 'high' && styles.highPriorityItem]}
+      style={styles.notificationItem}
+      onPress={() => navigation.navigate('Formation', {
+        formationId: item.data,
+        role: { isAdmin, isFormateur }
+      })}
     >
       <Ionicons 
-        name={item.icon}
-        size={24}
-        color="#00E5FF"
-        style={styles.icon}
+        name={!item.body.includes('inscription') ? 'school-outline' : 'clipboard-outline'} 
+        size={24} 
+        color="#007AFF" 
+        style={styles.icon} 
       />
       <View style={styles.notificationContent}>
-        <Text style={styles.notificationTime}>
-          {formatTimeDifference(item.timestamp)}
-        </Text>
         <Text style={styles.notificationTitle}>{item.title}</Text>
         <Text style={styles.notificationBody}>{item.body}</Text>
+        <Text style={styles.notificationTime}>
+          {new Date(item.timestamp).toLocaleString()}
+        </Text>
       </View>
     </TouchableOpacity>
   );
 
-  const formatTimeDifference = (timestamp) => {
-    const diff = Math.floor((Date.now() - timestamp) / 60000);
-    if (diff < 60) return `${diff} min ago`;
-    return `${Math.floor(diff / 60)} hours ago`;
-  };
-
   return (
     <View style={styles.container}>
       {/* Status Panel */}
-      
-
-      {/* Notifications List */}
-      <FlatList
-        data={notifications}
-        renderItem={renderNotification}
-        keyExtractor={(item) => item.id}
-        style={styles.listContainer}
-      />
-{/* <View style={styles.statusPanel}>
+      <View style={styles.statusPanel}>
         <View style={styles.statusRow}>
           <Text style={styles.statusLabel}>App Listening:</Text>
           <Switch
@@ -168,43 +167,41 @@ const NotificationCenter = ({ isAdmin, isFormateur }) => {
 
         <View style={styles.statusRow}>
           <Text style={styles.statusLabel}>Next Notification:</Text>
-          <Text style={styles.statusValue}>20:44</Text>
+          <Text style={styles.statusValue}>
+            {nextNotificationTime ? nextNotificationTime.toLocaleTimeString() : 'Not scheduled'}
+          </Text>
         </View>
 
         <View style={styles.statusRow}>
           <Text style={styles.statusLabel}>Last Reaction Test:</Text>
-          <Text style={styles.statusValue}>18:44 Today</Text>
+          <Text style={styles.statusValue}>
+            {lastTestDate ? lastTestDate.toLocaleString() : 'No tests recorded'}
+          </Text>
         </View>
 
         <View style={styles.predictionQualityContainer}>
           <Text style={styles.statusLabel}>Prediction Quality:</Text>
-          <View style={styles.qualityBadge}>
-            <Text style={styles.qualityText}>Poor</Text>
-          </View>
+          <Text style={[styles.qualityBadge, 
+            styles[`quality${calculatePredictionQuality()}`]]}>
+            {calculatePredictionQuality()}
+          </Text>
         </View>
 
         <View style={styles.testStatsContainer}>
           <Text style={styles.testStatsTitle}>Recent Tests:</Text>
-          <Text style={styles.testStat}>Last 3 days: 2</Text>
-          <Text style={styles.testStat}>Last week: 2</Text>
-          <Text style={styles.testStat}>Last month: 2</Text>
+          <Text style={styles.testStat}>Last 3 days: {testStats.last3Days}</Text>
+          <Text style={styles.testStat}>Last week: {testStats.lastWeek}</Text>
+          <Text style={styles.testStat}>Last month: {testStats.lastMonth}</Text>
         </View>
-      </View> */}
-      {/* Bottom Navigation */}
-      {/* <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="flask-outline" size={24} color="white" />
-          <Text style={styles.navText}>Do a Test</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="fitness-outline" size={24} color="white" />
-          <Text style={styles.navText}>My Health</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="notifications-outline" size={24} color="white" />
-          <Text style={styles.navText}>Notification Center</Text>
-        </TouchableOpacity>
-      </View> */}
+      </View>
+
+      {/* Notifications List */}
+      <FlatList
+        data={notifications}
+        renderItem={renderNotification}
+        keyExtractor={(item) => item.id}
+        style={styles.listContainer}
+      />
     </View>
   );
 };
@@ -249,13 +246,24 @@ const styles = StyleSheet.create({
     marginTop: 8,
     padding: 8,
     borderRadius: 4,
-    backgroundColor: '#FF5722',
-  },
-  qualityText: {
-    color: 'white',
     textAlign: 'center',
     fontWeight: 'bold',
-    fontSize: 16,
+  },
+  qualityExcellent: {
+    backgroundColor: '#4CAF50',
+    color: 'white',
+  },
+  qualityGood: {
+    backgroundColor: '#8BC34A',
+    color: 'white',
+  },
+  qualityFair: {
+    backgroundColor: '#FFC107',
+    color: 'black',
+  },
+  qualityPoor: {
+    backgroundColor: '#FF5722',
+    color: 'white',
   },
   testStatsContainer: {
     marginTop: 16,
@@ -278,21 +286,17 @@ const styles = StyleSheet.create({
   },
   notificationItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     backgroundColor: 'white',
     padding: 16,
     marginHorizontal: 16,
-    marginVertical: 20,
+    marginVertical: 8,
     borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 2,
-  },
-  highPriorityItem: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#FF5722',
   },
   notificationContent: {
     flex: 1,
@@ -301,38 +305,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
-    color: '#333',
   },
   notificationBody: {
     fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    color: '#333',
+    marginBottom: 8,
   },
   notificationTime: {
     fontSize: 12,
     color: '#888',
-    marginBottom: 4,
   },
   icon: {
     marginRight: 16,
-    marginTop: 2,
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#00E5FF',
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
-  },
-  navItem: {
-    alignItems: 'center',
-  },
-  navText: {
-    color: 'white',
-    fontSize: 12,
-    marginTop: 4,
   },
   logoutButton: {
     marginRight: 10,
@@ -343,5 +327,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NotificationCenter;
-
+export default NotificationList;

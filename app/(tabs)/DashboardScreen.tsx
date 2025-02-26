@@ -36,11 +36,11 @@ const FatigueDashboard = ({ userId = "iWZ5nUDp86X5bW1k9GsfR6iJIkh1" }) => {
       headerTitleStyle: {
         fontWeight: 'bold',
       },
-      // headerRight: () => (
-      //   <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-      //     <Text style={styles.logoutButtonText}>Se déconnecter</Text>
-      //   </TouchableOpacity>
-      // ),
+      headerRight: () => (
+        <TouchableOpacity style={styles.logoutButton}>
+          <Text style={styles.logoutButtonText}>Log out</Text>
+        </TouchableOpacity>
+      ),
     });
   }, [navigation]);
   useEffect(() => {
@@ -95,21 +95,13 @@ const FatigueDashboard = ({ userId = "iWZ5nUDp86X5bW1k9GsfR6iJIkh1" }) => {
     <View style={[styles.fatigueLabel, style]}>
       <Text style={styles.fatigueLabelText}>{label}</Text>
       <Text style={styles.fatigueLabelValue}>
-        {(value * 100).toFixed(0)}%
+        {(typeof value === 'number' && value<100) ? (value * 100).toFixed(0) + '%' : value}
       </Text>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      {/* <View style={styles.header}>
-        <Text style={styles.headerText}>Dashboard</Text>
-      </View> */}
-
-
-
-      {/* Main Content */}
       <View style={styles.mainContent}>
         <Image
           source={require('../../assets/images/zion_avatar.png')}
@@ -125,54 +117,61 @@ const FatigueDashboard = ({ userId = "iWZ5nUDp86X5bW1k9GsfR6iJIkh1" }) => {
               label="LLM Fatigue"
             />
             <FatigueLabel
+              style={styles.vocabLabel}
+              value={currentData.vocabulary_range || 'N/A'}
+              label="Vocabulary Range"
+            />
+            <FatigueLabel
               style={styles.saccadeLabel}
               value={currentData.estimated_saccade_fatigue}
               label="Saccade Fatigue"
             />
             <FatigueLabel
+              style={styles.saccadeVelLabel}
+              value={currentData.saccade_velocity || 'N/A'}
+              label="Saccade Velocity"
+            />
+            <FatigueLabel
+              style={styles.peakVelLabel}
+              value={currentData.peak_velocity || 'N/A'}
+              label="Peak Velocity"
+            />
+            <FatigueLabel
               style={styles.speechLabel}
               value={currentData.estimated_speechspeed_fatigue}
-              label="Speech Speed Fatigue"
+              label="Speech Speed"
             />
+            <FatigueLabel
+              style={styles.blinkLabel}
+              value={currentData.blink_rate || 'N/A'}
+              label="Blink Rate"
+            />
+            {/* <FatigueLabel
+              style={styles.totalLabel}
+              value={currentData.total_fatigue || 'N/A'}
+              label="Total Fatigue"
+            /> */}
           </>
         )}
 
-        {/* Navigation Arrows */}
         <View style={styles.navigationControls}>
-          <TouchableOpacity 
-            style={styles.navButton} 
-            onPress={handlePrevious}
-          >
+          <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
             <Text style={styles.navButtonText}>←</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.navButton} 
-            onPress={handleNext}
-          >
+          <TouchableOpacity style={styles.navButton} onPress={handleNext}>
             <Text style={styles.navButtonText}>→</Text>
           </TouchableOpacity>
         </View>
       </View>
-      {/* Analysis Card */}
+      
       <View style={styles.analysisCard}>
-        <Text style={styles.analysisTitle}>Cognitive Load Analysis</Text>
-        {/* <Text style={styles.analysisSubtitle}>Subject: Anonymous</Text> */}
+        <Text style={styles.analysisTitle}>Nirvana Score: 67% </Text>
+        <Text style={styles.analysisSubtitle}>Based on the last week</Text>
         <Text style={styles.analysisSubtitle}>
-          Date: {currentData ? new Date(parseInt(currentData.id_data)).toLocaleString() : 'Loading...'}
+          Test Date: 24 November at 18:44
+          {/* {currentData ? new Date(parseInt(currentData.id_data)).toLocaleString() : 'Loading...'} */}
         </Text>
       </View>
-      {/* Bottom Navigation */}
-      {/* <View style={styles.bottomNav}>
-        <View style={styles.bottomNavItem}>
-          <Text style={[styles.bottomNavText, styles.activeNavItem]}>Dashboard</Text>
-        </View>
-        <View style={styles.bottomNavItem}>
-          <Text style={styles.bottomNavText}>Mes notifications</Text>
-        </View>
-        <View style={styles.bottomNavItem}>
-          <Text style={styles.bottomNavText}>ReactionTest</Text>
-        </View>
-      </View> */}
     </SafeAreaView>
   );
 };
@@ -244,18 +243,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  llmLabel: {
-    right: '10%',
-    top: '35%',
-  },
-  saccadeLabel: {
-    right: '5%',
-    top: '5%',
-  },
-  speechLabel: {
-    left: '5%',
-    top: '55%',
-  },
+
   navigationControls: {
     position: 'absolute',
     bottom: 20,
@@ -305,6 +293,46 @@ const styles = StyleSheet.create({
   activeNavItem: {
     opacity: 1,
   },
+  logoutButton: {
+    marginRight: 10,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  llmLabel: {
+    left: '20%',
+    top: '5%',
+  },
+  saccadeLabel: {
+    right: '15%',
+    top: '5%',
+  },
+  speechLabel: {
+    left: '5%',
+    top: '55%',
+  },
+  vocabLabel: {
+    right: '5%',
+    top: '25%',
+  },
+  saccadeVelLabel: {
+    right: '5%',
+    top: '45%',
+  },
+  peakVelLabel: {
+    right: '5%',
+    top: '65%',
+  },
+  blinkLabel: {
+    left: '10%',
+    top: '35%',
+  },
+  // totalLabel: {
+  //   left: '15%',
+  //   top: '75%',
+  // }
+
 });
 
 export default FatigueDashboard;
